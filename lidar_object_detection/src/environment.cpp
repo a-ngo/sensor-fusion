@@ -51,11 +51,16 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr& viewer)
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr pointCloud = lidar->scan();
         // renderRays(viewer, lidar->position,pointCloud);
-    renderPointCloud(viewer, pointCloud, "pointCloud", Color(1,1,1));
+    // renderPointCloud(viewer, pointCloud, "pointCloud", Color(1,1,1));
 
-
-    // TODO:: Create point processor
     // process point clouds
+    // TODO: or instantiate on heap?
+    ProcessPointClouds<pcl::PointXYZ> processPointClouds;
+
+    auto segmentedClouds = processPointClouds.SegmentPlane(pointCloud, 3, 0.8f);
+    renderPointCloud(viewer, segmentedClouds.first, "segmented_cloud_first", Color(1,1,1));
+    renderPointCloud(viewer, segmentedClouds.second, "segmented_cloud_second", Color(0,1,0));
+
   
 }
 
