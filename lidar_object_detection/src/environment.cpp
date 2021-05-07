@@ -54,10 +54,12 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
   // TODO: or instantiate on heap?
   ProcessPointClouds<pcl::PointXYZ> processPointClouds;
 
-  auto segmentedClouds = processPointClouds.SegmentPlane(pointCloud, 3, 0.8f);
-  renderPointCloud(viewer, segmentedClouds.first, "segmented_cloud_first",
-                   Color(1, 1, 1));
-  renderPointCloud(viewer, segmentedClouds.second, "segmented_cloud_second",
+  std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr,
+            pcl::PointCloud<pcl::PointXYZ>::Ptr>
+      segmentedClouds = processPointClouds.SegmentPlane(pointCloud, 100, 0.2f);
+  renderPointCloud(viewer, segmentedClouds.first, "obstacleCloud",
+                   Color(1, 0, 0));
+  renderPointCloud(viewer, segmentedClouds.second, "planeCloud",
                    Color(0, 1, 0));
 }
 

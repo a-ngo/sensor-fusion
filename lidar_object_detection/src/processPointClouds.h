@@ -16,7 +16,9 @@
 #include <pcl/kdtree/kdtree.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/segmentation/sac_segmentation.h>
+
 #include <string>
+#include <utility>
 #include <vector>
 
 template <typename PointT> class ProcessPointClouds {
