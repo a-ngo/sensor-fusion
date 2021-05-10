@@ -3,6 +3,7 @@
 
 #include "../../processPointClouds.h"
 #include "../../render/render.h"
+#include <cstdint>
 #include <unordered_set>
 // using templates for processPointClouds so also include .cpp to help linker
 #include "../../processPointClouds.cpp"
@@ -13,8 +14,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData() {
   // Add inliers
   float scatter = 0.6;
   for (int i = -5; i < 5; i++) {
-    double rx = 2 * (((double)rand() / (RAND_MAX)) - 0.5);
-    double ry = 2 * (((double)rand() / (RAND_MAX)) - 0.5);
+    double rx = 2 * ((static_cast<double>(rand()) / (RAND_MAX)) - 0.5);
+    double ry = 2 * ((static_cast<double>(rand()) / (RAND_MAX)) - 0.5);
     pcl::PointXYZ point;
     point.x = i + scatter * rx;
     point.y = i + scatter * ry;
@@ -25,8 +26,8 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr CreateData() {
   // Add outliers
   int numOutliers = 10;
   while (numOutliers--) {
-    double rx = 2 * (((double)rand() / (RAND_MAX)) - 0.5);
-    double ry = 2 * (((double)rand() / (RAND_MAX)) - 0.5);
+    double rx = 2 * ((static_cast<double>(rand()) / (RAND_MAX)) - 0.5);
+    double ry = 2 * ((static_cast<double>(rand()) / (RAND_MAX)) - 0.5);
     pcl::PointXYZ point;
     point.x = 5 * rx;
     point.y = 5 * ry;
@@ -62,12 +63,32 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
 
   // TODO: Fill in this function
 
+  // check out cloud
+  std::cout << "This cloud has " << cloud->points.size() << " points."
+            << std::endl;
+
+  // for (auto point : cloud->points) {
+  //   std::cout << "point = " << point << std::endl;
+  //   std::cout << "x = " << point.x << std::endl;
+  //   std::cout << "y = " << point.y << std::endl;
+  //   std::cout << "z = " << point.z << std::endl;
+  // }
+
+  std::cout << "Some random number = " << rand();
+
   // For max iterations
+  for (int64_t iteration{0}; iteration <= maxIterations; ++iteration) {
+    std::cout << iteration << std::endl;
 
-  // Randomly sample subset and fit line
+    // 1. Randomly sample subset and fit line
 
-  // Measure distance between every point and fitted line
-  // If distance is smaller than threshold count it as inlier
+    // 2. loop over points
+    // 2a. Measure distance between every point and fitted line
+    // 2b. If distance is smaller than threshold count it as inlier
+
+    // 3. check number of inliers
+    // 3a. if biggest then set this inlier as new best result
+  }
 
   // Return indicies of inliers from fitted line with most inliers
 
@@ -75,7 +96,6 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
 }
 
 int main() {
-
   // Create viewer
   pcl::visualization::PCLVisualizer::Ptr viewer = initScene();
 
