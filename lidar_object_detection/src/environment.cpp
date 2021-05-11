@@ -6,6 +6,7 @@
 #include "sensors/lidar.h"
 // using templates for processPointClouds so also include .cpp to help linker
 #include "processPointClouds.cpp"
+#include <vector>
 
 std::vector<Car> initHighway(bool renderScene,
                              pcl::visualization::PCLVisualizer::Ptr &viewer) {
@@ -51,16 +52,32 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
   // renderPointCloud(viewer, pointCloud, "pointCloud", Color(1,1,1));
 
   // process point clouds
+  // segmentate plane
   // TODO: or instantiate on heap?
   ProcessPointClouds<pcl::PointXYZ> processPointClouds;
 
   std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr,
             pcl::PointCloud<pcl::PointXYZ>::Ptr>
       segmentedClouds = processPointClouds.SegmentPlane(pointCloud, 100, 0.2f);
-  renderPointCloud(viewer, segmentedClouds.first, "obstacleCloud",
-                   Color(1, 0, 0));
+  // renderPointCloud(viewer, segmentedClouds.first, "obstacleCloud",
+  //                  Color(1, 0, 0));
   renderPointCloud(viewer, segmentedClouds.second, "planeCloud",
-                   Color(0, 1, 0));
+                   Color(1, 1, 1));
+
+  // cluster objects
+  std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloud_clusters =
+      processPointClouds.Clustering(segmentedClouds.first, 1.0, 3, 30);
+
+  int cluster_id{0};
+  std::vector<Color> colors{Color(1, 0, 0), Color(0, 1, 0), Color(0, 0, 1)};
+
+  for (pcl::PointCloud<pcl::PointXYZ>::Ptr cluster : cloud_clusters) {
+    std::cout << "cluster size ";
+    processPointClouds.numPoints(cluster);
+    renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(cluster_id),
+                     colors[cluster_id]);
+    ++cluster_id;
+  }
 }
 
 // setAngle: SWITCH CAMERA ANGLE {XY, TopDown, Side, FPS}
