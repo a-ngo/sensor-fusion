@@ -59,8 +59,7 @@ pcl::visualization::PCLVisualizer::Ptr initScene() {
 }
 
 unsigned int random_number_in_range(unsigned int range) {
-  // return (rand_r(&seed) % range) + 1;
-  return (rand() % range) + 1;
+  return rand() % range;
 }
 
 std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
@@ -76,7 +75,7 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
     std::unordered_set<int> inliers;
 
     // Randomly sample subset and fit line
-    while (inliers.size() < 2) {
+    while (inliers.size() < 3) {
       inliers.insert(random_number_in_range(max_number));
     }
 
@@ -84,17 +83,37 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
     pcl::PointXYZ point_one = cloud->points[*itr];
     ++itr;
     pcl::PointXYZ point_two = cloud->points[*itr];
+    ++itr;
+    pcl::PointXYZ point_three = cloud->points[*itr];
 
-    // fit line
-    double A = point_one.y - point_two.y;
-    double B = point_two.x - point_one.x;
-    double C = point_one.x * point_two.y - point_two.x * point_one.y;
-    double coef = sqrt(pow(A, 2) + pow(B, 2));
+    float x1, y1, z1, x2, y2, z2, x3, y3, z3;
+    x1 = point_one.x;
+    y1 = point_one.y;
+    z1 = point_one.z;
 
-    // Measure distance between every point and fitted line
+    x2 = point_two.x;
+    y2 = point_two.y;
+    z2 = point_two.z;
+
+    x3 = point_three.x;
+    y3 = point_three.y;
+    z3 = point_three.z;
+
+    // fit plane
+    float a = (y2 - y1) * (z3 - z1) - (z2 - z1) * (y3 - y1);
+    float b = (z2 - z1) * (x3 - x1) - (x2 - x1) * (z3 - z1);
+    float c = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
+    float d = -(a * x1 + b * y1 + c * z1);
+    float coef = sqrt(pow(a, 2) + pow(b, 2) + pow(c, 2));
+
+    // Measure distance between every point and fitted plane
     for (int index{0}; index < cloud->points.size(); index++) {
+      if (inliers.count(index)) {
+        continue;
+      }
+
       pcl::PointXYZ point = cloud->points[index];
-      double distance = fabs(point.x * A + point.y * B + C) / coef;
+      float distance = fabs(point.x * a + point.y * b + point.z * c + d) / coef;
 
       if (distance <= distance_tol) {
         inliers.insert(index);
@@ -109,7 +128,6 @@ std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
 
   std::cout << "inlier counter = " << inliers_result.size() << std::endl;
 
-  // Return indicies of inliers from fitted line with most inliers
   return inliers_result;
 }
 
@@ -118,9 +136,18 @@ int main() {
   pcl::visualization::PCLVisualizer::Ptr viewer = initScene();
 
   // Create data
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData();
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud = CreateData3D();
+
+  // Time segmentation process
+  auto startTime = std::chrono::steady_clock::now();
 
   std::unordered_set<int> inliers = Ransac(cloud, 50, 0.5f);
+
+  auto endTime = std::chrono::steady_clock::now();
+  auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+      endTime - startTime);
+  std::cout << "plane segmentation took " << elapsedTime.count()
+            << " milliseconds" << std::endl;
 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloudInliers(
       new pcl::PointCloud<pcl::PointXYZ>());
