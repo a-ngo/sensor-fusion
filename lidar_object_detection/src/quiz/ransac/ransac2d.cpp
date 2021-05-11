@@ -4,7 +4,9 @@
 #include "../../processPointClouds.h"
 #include "../../render/render.h"
 #include <cstdint>
+#include <math.h>
 #include <unordered_set>
+#include <vector>
 // using templates for processPointClouds so also include .cpp to help linker
 #include "../../processPointClouds.cpp"
 
@@ -56,46 +58,59 @@ pcl::visualization::PCLVisualizer::Ptr initScene() {
   return viewer;
 }
 
+unsigned int random_number_in_range(unsigned int range) {
+  // return (rand_r(&seed) % range) + 1;
+  return (rand() % range) + 1;
+}
+
 std::unordered_set<int> Ransac(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud,
-                               int maxIterations, float distanceTol) {
-  std::unordered_set<int> inliersResult;
+                               int max_iterations, float distance_tol) {
+  std::unordered_set<int> inliers_result;
   srand(time(NULL));
-
-  // TODO: Fill in this function
-
-  // check out cloud
   std::cout << "This cloud has " << cloud->points.size() << " points."
             << std::endl;
 
-  // for (auto point : cloud->points) {
-  //   std::cout << "point = " << point << std::endl;
-  //   std::cout << "x = " << point.x << std::endl;
-  //   std::cout << "y = " << point.y << std::endl;
-  //   std::cout << "z = " << point.z << std::endl;
-  // }
-
   auto max_number{cloud->points.size()};
 
-  // For max iterations
-  for (int64_t iteration{0}; iteration <= maxIterations; ++iteration) {
-    // std::cout << iteration << std::endl;
+  for (int64_t iteration{0}; iteration <= max_iterations; ++iteration) {
+    std::unordered_set<int> inliers;
 
-    std::cout << "Some random number = " << (rand() % max_number) + 1
-              << std::endl;
+    // Randomly sample subset and fit line
+    while (inliers.size() < 2) {
+      inliers.insert(random_number_in_range(max_number));
+    }
 
-    //   // 1. Randomly sample subset and fit line
+    auto itr = inliers.begin();
+    pcl::PointXYZ point_one = cloud->points[*itr];
+    ++itr;
+    pcl::PointXYZ point_two = cloud->points[*itr];
 
-    //   // 2. loop over points
-    //   // 2a. Measure distance between every point and fitted line
-    //   // 2b. If distance is smaller than threshold count it as inlier
+    // fit line
+    double A = point_one.y - point_two.y;
+    double B = point_two.x - point_one.x;
+    double C = point_one.x * point_two.y - point_two.x * point_one.y;
+    double coef = sqrt(pow(A, 2) + pow(B, 2));
 
-    //   // 3. check number of inliers
-    //   // 3a. if biggest then set this inlier as new best result
+    // Measure distance between every point and fitted line
+    for (int index{0}; index < cloud->points.size(); index++) {
+      pcl::PointXYZ point = cloud->points[index];
+      double distance = fabs(point.x * A + point.y * B + C) / coef;
+
+      if (distance <= distance_tol) {
+        inliers.insert(index);
+      }
+    }
+
+    // check if result was better
+    if (inliers_result.size() < inliers.size()) {
+      inliers_result = inliers;
+    }
   }
 
-  // Return indicies of inliers from fitted line with most inliers
+  std::cout << "inlier counter = " << inliers_result.size() << std::endl;
 
-  return inliersResult;
+  // Return indicies of inliers from fitted line with most inliers
+  return inliers_result;
 }
 
 int main() {
