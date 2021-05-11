@@ -111,6 +111,7 @@ int main() {
   render2DTree(tree->root, viewer, window, it);
 
   std::cout << "Test Search" << std::endl;
+  // TODO(a-ngo): test with different target points
   std::vector<int> nearby = tree->search({-6, 7}, 3.0);
   for (int index : nearby)
     std::cout << index << ",";
