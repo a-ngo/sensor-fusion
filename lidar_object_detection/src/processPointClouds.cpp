@@ -17,13 +17,29 @@ void ProcessPointClouds<PointT>::numPoints(
 
 template <typename PointT>
 typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(
-    typename pcl::PointCloud<PointT>::Ptr cloud, float filterRes,
+    typename pcl::PointCloud<PointT>::Ptr cloud, float filter_res,
     Eigen::Vector4f minPoint, Eigen::Vector4f maxPoint) {
   // Time segmentation process
   auto startTime = std::chrono::steady_clock::now();
 
-  // TODO: Fill in the function to do voxel grid point reduction and region
-  // based filtering
+  // voxel grid point reduction
+  typename pcl::PointCloud<PointT>::Ptr cloud_filtered(
+      new pcl::PointCloud<PointT>());
+  pcl::VoxelGrid<PointT> sor;
+  sor.setInputCloud(cloud);
+  sor.setLeafSize(filter_res, filter_res, filter_res);
+  sor.filter(*cloud_filtered);
+
+  // region based filtering
+  typename pcl::PointCloud<PointT>::Ptr cloud_roi(
+      new pcl::PointCloud<PointT>());
+  pcl::CropBox<PointT> roi_extractor;
+  roi_extractor.setMin(minPoint);
+  roi_extractor.setMax(maxPoint);
+  roi_extractor.setInputCloud(cloud_filtered);
+  roi_extractor.filter(*cloud_roi);
+
+  // TODO(a-ngo): rm points from ego vehicle
 
   auto endTime = std::chrono::steady_clock::now();
   auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -31,7 +47,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(
   std::cout << "filtering took " << elapsedTime.count() << " milliseconds"
             << std::endl;
 
-  return cloud;
+  return cloud_roi;
 }
 
 template <typename PointT>
