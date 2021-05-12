@@ -1,6 +1,3 @@
-/* \author Aaron Brown */
-// Quiz on implementing simple RANSAC line fitting
-
 #include "../../render/box.h"
 #include "../../render/render.h"
 #include "kdtree.h"
@@ -20,7 +17,7 @@ pcl::visualization::PCLVisualizer::Ptr initScene(Box window, int zoom) {
   viewer->addCoordinateSystem(1.0);
 
   viewer->addCube(window.x_min, window.x_max, window.y_min, window.y_max, 0, 0,
-                  1, 1, 1, "window");
+                  0.1, 0.1, 0.1, "window");
   return viewer;
 }
 
@@ -111,8 +108,20 @@ int main() {
   render2DTree(tree->root, viewer, window, it);
 
   std::cout << "Test Search" << std::endl;
-  // TODO(a-ngo): test with different target points
-  std::vector<int> nearby = tree->search({-6, 7}, 3.0);
+  // visualize target zone
+  std::vector<float> target{5, 0};
+  float distance_tol = 8.0;
+  viewer->addCube(target[0] - distance_tol, target[0] + distance_tol,
+                  target[1] - distance_tol, target[1] + distance_tol, 0, 0, 0.0,
+                  0.8, 0.0, "target");
+  pcl::ModelCoefficients circle_coeff;
+  circle_coeff.values.resize(3);
+  circle_coeff.values[0] = target[0];
+  circle_coeff.values[1] = target[1];
+  circle_coeff.values[2] = distance_tol;
+  viewer->addCircle(circle_coeff, "distance_circle");
+
+  std::vector<int> nearby = tree->search(target, distance_tol);
   for (int index : nearby)
     std::cout << index << ",";
   std::cout << std::endl;

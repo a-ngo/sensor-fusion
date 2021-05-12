@@ -1,6 +1,3 @@
-/* \author Aaron Brown */
-// Quiz on implementing simple RANSAC line fitting
-
 #include "../../processPointClouds.h"
 #include "../../render/render.h"
 #include <cstdint>
