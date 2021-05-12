@@ -68,7 +68,7 @@ void render2DTree(Node *node, pcl::visualization::PCLVisualizer::Ptr &viewer,
   }
 }
 
-void proximity(const std::vector<float> &point, std::vector<int> &cluster,
+void proximity(const std::vector<float> point, std::vector<int> &cluster,
                KdTree *tree, float distance_tol, unsigned int point_id,
                std::unordered_set<int> &processed_points) {
   if (!processed_points.count(point_id)) {

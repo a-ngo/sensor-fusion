@@ -53,7 +53,6 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
   // process point clouds
   // segmentate plane
-  // TODO: or instantiate on heap?
   ProcessPointClouds<pcl::PointXYZ> processPointClouds;
 
   std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr,
@@ -66,7 +65,7 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
 
   // cluster objects
   std::vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> cloud_clusters =
-      processPointClouds.Clustering(segmentedClouds.first, 1.0, 3, 30);
+      processPointClouds.Clustering(segmentedClouds.first, 2.0, 3, 30);
 
   int cluster_id{0};
   std::vector<Color> colors{Color(1, 0, 0), Color(0, 1, 0), Color(0, 0, 1)};
@@ -76,6 +75,8 @@ void simpleHighway(pcl::visualization::PCLVisualizer::Ptr &viewer) {
     processPointClouds.numPoints(cluster);
     renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(cluster_id),
                      colors[cluster_id]);
+    Box box = processPointClouds.BoundingBox(cluster);
+    renderBox(viewer, box, cluster_id);
     ++cluster_id;
   }
 }
