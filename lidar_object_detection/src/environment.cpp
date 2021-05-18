@@ -98,9 +98,6 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer) {
       pointProcessorI->FilterCloud(inputCloud, filter_res,
                                    Eigen::Vector4f(-20, -12.5, -5, 1),
                                    Eigen::Vector4f(50, 12.5, 10, 1));
-  // renderPointCloud(viewer, filterCloud, "filterCloud");
-
-  // renderPointCloud(viewer, inputCloud, "inputCloud");
 
   // segmentation
   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr,
@@ -135,16 +132,14 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                 pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI) {
   // filter cloud
   // TODO(a-ngo): optimize parameters
-  float filter_res{0.5f};
+  float filter_res{0.8f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud =
       pointProcessorI->FilterCloud(inputCloudI, filter_res,
-                                   Eigen::Vector4f(-20, -12.5, -5, 1),
-                                   Eigen::Vector4f(50, 12.5, 10, 1));
-  // renderPointCloud(viewer, filterCloud, "filterCloud");
-
-  // renderPointCloud(viewer, inputCloud, "inputCloud");
+                                   Eigen::Vector4f(-20, -8.5, -5, 1),
+                                   Eigen::Vector4f(50, 8.5, 10, 1));
 
   // segmentation
+  // TODO(a-ngo): optimize parameters
   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr,
             pcl::PointCloud<pcl::PointXYZI>::Ptr>
       segmentedClouds = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2f);
@@ -156,7 +151,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
   // cluster objects
   // TODO(a-ngo): optimize parameters
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
-      pointProcessorI->Clustering(segmentedClouds.first, 2.0, 10, 300);
+      pointProcessorI->Clustering(segmentedClouds.first, 1.0, 5, 50);
 
   int cluster_id{0};
   Color obstacle_color{1, 0, 0};
@@ -166,8 +161,13 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
     pointProcessorI->numPoints(cluster);
     renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(cluster_id),
                      obstacle_color);
-    Box box = pointProcessorI->BoundingBox(cluster);
+
+    // Box box = pointProcessorI->BoundingBox(cluster);
+    // renderBox(viewer, box, cluster_id);
+
+    BoxQ box = pointProcessorI->BoundingBoxQ(cluster);
     renderBox(viewer, box, cluster_id);
+
     ++cluster_id;
   }
 }
