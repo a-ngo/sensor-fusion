@@ -22,7 +22,7 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(
   // Time segmentation process
   auto startTime = std::chrono::steady_clock::now();
 
-  // voxel grid point reduction
+  // voxel grid point reduction - downsampling
   typename pcl::PointCloud<PointT>::Ptr cloud_filtered(
       new pcl::PointCloud<PointT>());
   pcl::VoxelGrid<PointT> sor;
@@ -33,13 +33,32 @@ typename pcl::PointCloud<PointT>::Ptr ProcessPointClouds<PointT>::FilterCloud(
   // region based filtering
   typename pcl::PointCloud<PointT>::Ptr cloud_roi(
       new pcl::PointCloud<PointT>());
-  pcl::CropBox<PointT> roi_extractor;
+  pcl::CropBox<PointT> roi_extractor(true);
   roi_extractor.setMin(minPoint);
   roi_extractor.setMax(maxPoint);
   roi_extractor.setInputCloud(cloud_filtered);
   roi_extractor.filter(*cloud_roi);
 
-  // TODO(a-ngo): rm points from ego vehicle
+  // rm points from ego vehicle
+  std::vector<int> ego_indices;
+
+  pcl::CropBox<PointT> ego_extractor(true);
+  ego_extractor.setMin(Eigen::Vector4f(-3, -1.5, -5, 1));
+  ego_extractor.setMax(Eigen::Vector4f(3, 1.5, 5, 1));
+  ego_extractor.setInputCloud(cloud_roi);
+  ego_extractor.filter(ego_indices);
+
+  pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
+  for (int point : ego_indices) {
+    inliers->indices.push_back(point);
+  }
+
+  // filtering the ego points out
+  pcl::ExtractIndices<PointT> extract;
+  extract.setInputCloud(cloud_roi);
+  extract.setIndices(inliers);
+  extract.setNegative(true);
+  extract.filter(*cloud_roi);
 
   auto endTime = std::chrono::steady_clock::now();
   auto elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(
