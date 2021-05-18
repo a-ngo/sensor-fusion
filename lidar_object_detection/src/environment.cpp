@@ -131,7 +131,6 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                 ProcessPointClouds<pcl::PointXYZI> *pointProcessorI,
                 pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI) {
   // filter cloud
-  // TODO(a-ngo): optimize parameters
   float filter_res{0.8f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud =
       pointProcessorI->FilterCloud(inputCloudI, filter_res,
@@ -139,7 +138,6 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                                    Eigen::Vector4f(50, 6.5, 10, 1));
 
   // segmentation
-  // TODO(a-ngo): optimize parameters
   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr,
             pcl::PointCloud<pcl::PointXYZI>::Ptr>
       segmentedClouds = pointProcessorI->SegmentPlane(filterCloud, 100, 0.2f);
@@ -149,7 +147,6 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                    Color(0, 1, 0));
 
   // cluster objects
-  // TODO(a-ngo): optimize parameters
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
       pointProcessorI->Clustering(segmentedClouds.first, 1.0, 5, 50);
 

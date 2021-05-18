@@ -221,6 +221,40 @@ ProcessPointClouds<PointT>::SegmentPlane(
 }
 
 template <typename PointT>
+void ProcessPointClouds<PointT>::proximity(
+    const std::vector<float> point, std::vector<int> &cluster, KdTree *tree,
+    float distance_tol, unsigned int point_id,
+    std::unordered_set<int> &processed_points) {
+  if (!processed_points.count(point_id)) {
+    processed_points.insert(point_id);
+    cluster.push_back(point_id);
+    std::vector<int> nearby_point_ids = tree->search(point, distance_tol);
+    for (int id : nearby_point_ids) {
+      proximity(point, cluster, tree, distance_tol, id, processed_points);
+    }
+  }
+}
+
+template <typename PointT>
+std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(
+    const std::vector<std::vector<float>> &points, KdTree *tree,
+    float distance_tol) {
+  std::vector<std::vector<int>> clusters;
+  std::unordered_set<int> processed_points;
+  unsigned int point_id{0};
+  for (const std::vector<float> point : points) {
+    if (!processed_points.count(point_id)) {
+      std::vector<int> cluster;
+      // find and add all nearby points to cluster
+      proximity(point, cluster, tree, distance_tol, point_id, processed_points);
+      clusters.push_back(cluster);
+    }
+    ++point_id;
+  }
+  return clusters;
+}
+
+template <typename PointT>
 std::vector<typename pcl::PointCloud<PointT>::Ptr>
 ProcessPointClouds<PointT>::Clustering(
     typename pcl::PointCloud<PointT>::Ptr cloud, float cluster_tolerance,
@@ -228,32 +262,68 @@ ProcessPointClouds<PointT>::Clustering(
   // Time clustering process
   auto startTime = std::chrono::steady_clock::now();
 
-  std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+  // std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
-  // detected obstacles
-  typename pcl::search::KdTree<PointT>::Ptr tree(
-      new pcl::search::KdTree<PointT>);
-  tree->setInputCloud(cloud);
+  // pcl version
+  // // detected obstacles
+  // typename pcl::search::KdTree<PointT>::Ptr tree(
+  //     new pcl::search::KdTree<PointT>);
+  // tree->setInputCloud(cloud);
 
-  std::vector<pcl::PointIndices> cluster_indices;
-  pcl::EuclideanClusterExtraction<PointT> ec;
-  ec.setClusterTolerance(cluster_tolerance);
-  ec.setMinClusterSize(min_size);
-  ec.setMaxClusterSize(max_size);
-  ec.setSearchMethod(tree);
-  ec.setInputCloud(cloud);
-  ec.extract(cluster_indices);
+  // std::vector<pcl::PointIndices> cluster_indices;
+  // pcl::EuclideanClusterExtraction<PointT> ec;
+  // ec.setClusterTolerance(cluster_tolerance);
+  // ec.setMinClusterSize(min_size);
+  // ec.setMaxClusterSize(max_size);
+  // ec.setSearchMethod(tree);
+  // ec.setInputCloud(cloud);
+  // ec.extract(cluster_indices);
 
-  for (std::vector<pcl::PointIndices>::const_iterator it =
-           cluster_indices.begin();
-       it != cluster_indices.end(); ++it) {
-    typename pcl::PointCloud<PointT>::Ptr cluster(new pcl::PointCloud<PointT>);
+  // for (std::vector<pcl::PointIndices>::const_iterator it =
+  //          cluster_indices.begin();
+  //      it != cluster_indices.end(); ++it) {
+  //   typename pcl::PointCloud<PointT>::Ptr cluster(new
+  //   pcl::PointCloud<PointT>); for (const auto &idx : it->indices) {
+  //     cluster->push_back((*cloud)[idx]);
+  //     cluster->width = cluster->points.size();
+  //     cluster->height = 1;
+  //     cluster->is_dense = true;
+  //   }
+  //   clusters.push_back(cluster);
+  // }
+
+  // get points from cloud
+  std::vector<std::vector<float>> points{};
+  for (auto point : cloud->points()) {
+    points.push_back(point);
+  }
+
+  // create tree
+  KdTree *tree = new KdTree;
+  for (int i = 0; i < points.size(); i++)
+    tree->insert(points[i], i);
+
+  // perform clustering
+  std::vector<std::vector<int>> clusters =
+      euclideanCluster(points, tree, cluster_tolerance);
+
+  // TODO(a-ngo):
+  // for (std::vector<int> cluster : clusters)
+  for (std::vector<pcl::PointIndices>::const_iterator it = clusters.begin();
+       it != clusters.end(); ++it) {
+    typename pcl::PointCloud<PointT>::Ptr cluster(
+        new pcl::PointCloud<PointT>());
+
     for (const auto &idx : it->indices) {
       cluster->push_back((*cloud)[idx]);
       cluster->width = cluster->points.size();
       cluster->height = 1;
       cluster->is_dense = true;
     }
+    // for (int index : cluster) {
+    //   cluster->points.push_back(PointT(points[index][0], points[index][1],
+    //                                    points[index][2], points[index][3]));
+    // }
     clusters.push_back(cluster);
   }
 

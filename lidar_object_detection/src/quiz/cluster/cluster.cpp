@@ -166,10 +166,10 @@ int main() {
     std::cout << "Cluster " << std::endl;
     pcl::PointCloud<pcl::PointXYZ>::Ptr clusterCloud(
         new pcl::PointCloud<pcl::PointXYZ>());
-    for (int indice : cluster) {
-      std::cout << "indice = " << indice << std::endl;
+    for (int index : cluster) {
+      std::cout << "index = " << index << std::endl;
       clusterCloud->points.push_back(
-          pcl::PointXYZ(points[indice][0], points[indice][1], 0));
+          pcl::PointXYZ(points[index][0], points[index][1], 0));
     }
     renderPointCloud(viewer, clusterCloud,
                      "cluster" + std::to_string(clusterId),
