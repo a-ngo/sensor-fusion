@@ -18,6 +18,7 @@
 #include <pcl/segmentation/sac_segmentation.h>
 
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -47,6 +48,9 @@ public:
   std::vector<typename pcl::PointCloud<PointT>::Ptr>
   Clustering(typename pcl::PointCloud<PointT>::Ptr cloud,
              float clusterTolerance, int minSize, int maxSize);
+
+  std::unordered_set<int> Ransac(typename pcl::PointCloud<PointT>::Ptr cloud,
+                                 int max_iterations, float distance_tol);
 
   Box BoundingBox(typename pcl::PointCloud<PointT>::Ptr cluster);
 

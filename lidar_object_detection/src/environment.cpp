@@ -135,8 +135,8 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
   float filter_res{0.8f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud =
       pointProcessorI->FilterCloud(inputCloudI, filter_res,
-                                   Eigen::Vector4f(-20, -8.5, -5, 1),
-                                   Eigen::Vector4f(50, 8.5, 10, 1));
+                                   Eigen::Vector4f(-20, -6.5, -5, 1),
+                                   Eigen::Vector4f(50, 6.5, 10, 1));
 
   // segmentation
   // TODO(a-ngo): optimize parameters
@@ -162,11 +162,11 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
     renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(cluster_id),
                      obstacle_color);
 
-    // Box box = pointProcessorI->BoundingBox(cluster);
-    // renderBox(viewer, box, cluster_id);
-
-    BoxQ box = pointProcessorI->BoundingBoxQ(cluster);
+    Box box = pointProcessorI->BoundingBox(cluster);
     renderBox(viewer, box, cluster_id);
+
+    // BoxQ box = pointProcessorI->BoundingBoxQ(cluster);
+    // renderBox(viewer, box, cluster_id);
 
     ++cluster_id;
   }
