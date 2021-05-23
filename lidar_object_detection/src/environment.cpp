@@ -148,13 +148,12 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
   // cluster objects
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
-      pointProcessorI->Clustering(segmentedClouds.first, 1.0, 5, 50);
+      pointProcessorI->Clustering(segmentedClouds.first, 2.5, 5, 50);
 
   int cluster_id{0};
   Color obstacle_color{1, 0, 0};
 
   for (pcl::PointCloud<pcl::PointXYZI>::Ptr cluster : cloud_clusters) {
-    std::cout << "cluster size ";
     pointProcessorI->numPoints(cluster);
     renderPointCloud(viewer, cluster, "obstCloud" + std::to_string(cluster_id),
                      obstacle_color);

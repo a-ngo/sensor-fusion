@@ -262,7 +262,7 @@ ProcessPointClouds<PointT>::Clustering(
   // Time clustering process
   auto startTime = std::chrono::steady_clock::now();
 
-  // std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
+  std::vector<typename pcl::PointCloud<PointT>::Ptr> clusters;
 
   // pcl version
   // // detected obstacles
@@ -292,30 +292,44 @@ ProcessPointClouds<PointT>::Clustering(
   //   clusters.push_back(cluster);
   // }
 
+  // TODO(a-ngo): rm after testing
+  std::cout << "This cloud has " << cloud->points.size() << " points."
+            << std::endl;
+
   // get points from cloud
-  std::vector<std::vector<float>> points{};
-  for (auto point : cloud->points()) {
-    points.push_back(point);
+  std::vector<std::vector<float>> cloud_points{};
+  for (auto point : cloud->points) {
+    std::vector<float> cloud_point{0, 0, 0};
+    cloud_point.at(0) = point.x;
+    cloud_point.at(1) = point.y;
+    cloud_point.at(2) = point.z;
+    cloud_points.push_back(cloud_point);
   }
 
   // create tree
   KdTree *tree = new KdTree;
-  for (int i = 0; i < points.size(); i++)
-    tree->insert(points[i], i);
+  for (int i = 0; i < cloud_points.size(); i++)
+    tree->insert(cloud_points[i], i);
 
   // perform clustering
-  std::vector<std::vector<int>> clusters =
-      euclideanCluster(points, tree, cluster_tolerance);
+  std::vector<std::vector<int>> clusters_ids =
+      euclideanCluster(cloud_points, tree, cluster_tolerance);
 
   // TODO(a-ngo):
   // for (std::vector<int> cluster : clusters)
-  for (std::vector<pcl::PointIndices>::const_iterator it = clusters.begin();
-       it != clusters.end(); ++it) {
+  for (auto cluster_ids : clusters_ids) {
+
     typename pcl::PointCloud<PointT>::Ptr cluster(
         new pcl::PointCloud<PointT>());
 
-    for (const auto &idx : it->indices) {
-      cluster->push_back((*cloud)[idx]);
+    // TODO(a-ngo): or use here point indices like the following instead of ints
+    // ? pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
+    //  for (int point : indices) {
+    //   inliers->indices.push_back(point);
+    // }
+
+    for (auto index : cluster_ids) {
+      cluster->push_back((*cloud)[index]);
       cluster->width = cluster->points.size();
       cluster->height = 1;
       cluster->is_dense = true;
@@ -334,6 +348,8 @@ ProcessPointClouds<PointT>::Clustering(
             << " milliseconds and found " << clusters.size() << " clusters"
             << std::endl;
 
+  // TODO(a-ngo): output should be:
+  // std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters
   return clusters;
 }
 

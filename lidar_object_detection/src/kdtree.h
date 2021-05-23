@@ -1,3 +1,6 @@
+#ifndef KDRTREE_H_
+#define KDRTREE_H_
+
 #include "render/render.h"
 #include <math.h>
 #include <sys/types.h>
@@ -81,3 +84,4 @@ struct KdTree {
     return ids;
   }
 };
+#endif /* KDTREE_H_ */
