@@ -1,4 +1,7 @@
-#include "../../render/render.h"
+#ifndef KDRTREE_H_
+#define KDRTREE_H_
+
+#include "render/render.h"
 #include <math.h>
 #include <sys/types.h>
 #include <vector>
@@ -80,3 +83,4 @@ struct KdTree {
     return ids;
   }
 };
+#endif /* KDTREE_H_ */
