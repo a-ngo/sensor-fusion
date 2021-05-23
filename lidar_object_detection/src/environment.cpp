@@ -92,7 +92,6 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer) {
       pointProcessorI->loadPcd("../src/sensors/data/pcd/data_1/0000000000.pcd");
 
   // filter cloud
-  // TODO(a-ngo): optimize parameters
   float filter_res{0.5f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filterCloud =
       pointProcessorI->FilterCloud(inputCloud, filter_res,
@@ -109,9 +108,8 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer) {
                    Color(0, 1, 0));
 
   // cluster objects
-  // TODO(a-ngo): optimize parameters
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
-      pointProcessorI->Clustering(segmentedClouds.first, 2.0, 10, 300);
+      pointProcessorI->Clustering(segmentedClouds.first, 2.5, 10, 300);
 
   int cluster_id{0};
   Color obstacle_color{1, 0, 0};
@@ -148,7 +146,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
   // cluster objects
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
-      pointProcessorI->Clustering(segmentedClouds.first, 2.5, 5, 50);
+      pointProcessorI->Clustering(segmentedClouds.first, 3.2, 5, 50);
 
   int cluster_id{0};
   Color obstacle_color{1, 0, 0};

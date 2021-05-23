@@ -28,7 +28,6 @@ struct KdTree {
 
   void insert_helper(Node **node, uint depth, std::vector<float> point,
                      int id) {
-    // TODO(a-ngo): deeply understand these pointers
     // dereference to check its value
     if (*node == NULL) {
       *node = new Node(point, id);
