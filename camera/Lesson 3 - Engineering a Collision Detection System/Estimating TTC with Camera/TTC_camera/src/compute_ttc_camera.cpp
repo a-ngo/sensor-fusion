@@ -73,6 +73,15 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev,
 }
 
 int main() {
+  /* camera-based TTC calculation procedure
+    1. detect bounding boxes of objects
+    2. calculate key points/features within bboxes of objects
+    3. match key points between frames to establish correspondences
+    4. calculate relative distances between changes between these
+       correspondences within the bounding box and compute stable estimate of
+       TTC
+  */
+
   // step 1: read pre-recorded keypoint sets from file
   // Note that the function "readKeypoints" is a helper function that is able to
   // read pre-saved results from disk so that you can focus on TTC computation
