@@ -81,6 +81,7 @@ void cornernessHarris() {
   // visualize keypoints
   windowName = "Harris Corner Detection Results";
   cv::namedWindow(windowName, 5);
+
   cv::Mat visImage = dst_norm_scaled.clone();
   cv::drawKeypoints(dst_norm_scaled, keypoints, visImage, cv::Scalar::all(-1),
                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
