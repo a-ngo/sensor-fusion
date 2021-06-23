@@ -8,8 +8,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/xfeatures2d.hpp>
 #include <vector>
-// #include <opencv2/xfeatures2d/nonfree.hpp> // needed for older versions of
-// opencv
+// #include <opencv2/xfeatures2d/nonfree.hpp> // for older opencv versions
 
 void detect(cv::Mat img_source, cv::Mat img_gray, std::string detector_name,
             cv::Ptr<cv::FeatureDetector> detector,
@@ -17,7 +16,6 @@ void detect(cv::Mat img_source, cv::Mat img_gray, std::string detector_name,
             cv::Ptr<cv::DescriptorExtractor> descriptor, cv::Mat desc) {
   // detector
   double t = static_cast<double>(cv::getTickCount());
-
   detector->detect(img_gray, keypoints);
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
   std::cout << detector_name << " detector with n= " << keypoints.size()
@@ -25,9 +23,7 @@ void detect(cv::Mat img_source, cv::Mat img_gray, std::string detector_name,
 
   // descriptor
   t = static_cast<double>(cv::getTickCount());
-
   descriptor->compute(img_gray, keypoints, desc);
-
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
   std::cout << detector_name << " descriptor in " << 1000 * t / 1.0 << " ms"
             << std::endl;
@@ -46,65 +42,6 @@ void descKeypoints1() {
   cv::Mat imgGray;
   cv::Mat img = cv::imread("../images/img1.png");
   cv::cvtColor(img, imgGray, cv::COLOR_BGR2GRAY);
-
-  // BRISK detector / descriptor
-  //   cv::Ptr<cv::FeatureDetector> detector = cv::BRISK::create();
-  //   std::vector<cv::KeyPoint> kpts_BRISK;
-
-  //   double t = static_cast<double>(cv::getTickCount());
-  //   detector->detect(imgGray, kpts_BRISK);
-  //   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  //   std::cout << "BRISK detector with n= " << kpts_BRISK.size()
-  //             << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
-
-  //   cv::Ptr<cv::DescriptorExtractor> descriptor = cv::BRISK::create();
-  //   cv::Mat descriptor_BRISK;
-  //   t = static_cast<double>(cv::getTickCount());
-
-  //   descriptor->compute(imgGray, kpts_BRISK, descriptor_BRISK);
-
-  //   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  //   std::cout << "BRISK descriptor in " << 1000 * t / 1.0 << " ms" <<
-  //   std::endl;
-
-  //   // visualize results
-  //   cv::Mat visImage = img.clone();
-  //   cv::drawKeypoints(img, kpts_BRISK, visImage, cv::Scalar::all(-1),
-  //                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  //   std::string windowName = "BRISK Results";
-  //   cv::namedWindow(windowName, 1);
-  //   imshow(windowName, visImage);
-
-  // SIFT detector
-  // detect keypoints
-  //   cv::Ptr<cv::FeatureDetector> sift_detector = cv::SIFT::create();
-  //   std::vector<cv::KeyPoint> sift_keypoints;
-
-  //   t = static_cast<double>(cv::getTickCount());
-  //   sift_detector->detect(imgGray, sift_keypoints);
-  //   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  //   std::cout << "SIFT detector with n= " << sift_keypoints.size()
-  //             << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
-
-  //   // descriptor
-  //   cv::Ptr<cv::DescriptorExtractor> sift_descriptor = cv::SIFT::create();
-  //   cv::Mat sift_descr;
-
-  //   t = static_cast<double>(cv::getTickCount());
-
-  //   sift_descriptor->compute(imgGray, sift_keypoints, sift_descr);
-
-  //   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  //   std::cout << "SIFT descriptor in " << 1000 * t / 1.0 << " ms" <<
-  //   std::endl;
-
-  //   // visualize results
-  //   visImage = img.clone();
-  //   cv::drawKeypoints(img, sift_keypoints, visImage, cv::Scalar::all(-1),
-  //                     cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-  //   windowName = "SIFT Results";
-  //   cv::namedWindow(windowName, 1);
-  //   imshow(windowName, visImage);
 
   // BRISK
   cv::Ptr<cv::FeatureDetector> detector_brisk = cv::BRISK::create();
@@ -129,6 +66,13 @@ void descKeypoints1() {
   cv::Mat descr_orb;
   detect(img, imgGray, "ORB", detector_orb, keypoints_orb, descriptor_orb,
          descr_orb);
+
+  cv::Ptr<cv::FeatureDetector> detector_akaze = cv::AKAZE::create();
+  std::vector<cv::KeyPoint> keypoints_akaze;
+  cv::Ptr<cv::DescriptorExtractor> descriptor_akaze = cv::AKAZE::create();
+  cv::Mat descr_akaze;
+  detect(img, imgGray, "AKAZE", detector_akaze, keypoints_akaze,
+         descriptor_akaze, descr_akaze);
 
   cv::waitKey(0);
 
