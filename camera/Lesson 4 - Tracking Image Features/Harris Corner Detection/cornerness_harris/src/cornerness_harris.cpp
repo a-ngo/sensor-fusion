@@ -99,6 +99,9 @@ void cornernessHarris() {
       }
     }
   }
+
+  std::cout << "Number of detected corners: " << keypoints.size() << std::endl;
+
   std::string windowName = "Harris Corner Detector Response Matrix-final";
 
   cv::Mat keypoints_image = dst_norm_scaled.clone();
