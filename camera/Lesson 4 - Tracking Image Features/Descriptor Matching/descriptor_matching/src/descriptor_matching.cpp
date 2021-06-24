@@ -14,8 +14,11 @@ void matchDescriptors(cv::Mat &imgSource, cv::Mat &imgRef,
                       std::string descriptorType, std::string matcherType,
                       std::string selectorType) {
   // configure matcher
-  bool crossCheck = false;
+  bool crossCheck = true;
   cv::Ptr<cv::DescriptorMatcher> matcher;
+
+  // TODO(a-ngo): or possible to use matches from arg?
+  std::vector<std::vector<cv::DMatch>> knn_matches;
 
   if (matcherType.compare("MAT_BF") == 0) {
     int normType = descriptorType.compare("DES_BINARY") == 0 ? cv::NORM_HAMMING
@@ -29,8 +32,7 @@ void matchDescriptors(cv::Mat &imgSource, cv::Mat &imgRef,
       descSource.convertTo(descSource, CV_32F);
       descRef.convertTo(descRef, CV_32F);
     }
-
-    //... TODO : implement FLANN matching
+    matcher = cv::FlannBasedMatcher::create();
     std::cout << "FLANN matching";
   }
 
@@ -44,11 +46,28 @@ void matchDescriptors(cv::Mat &imgSource, cv::Mat &imgRef,
     std::cout << " (NN) with n=" << matches.size() << " matches in "
               << 1000 * t / 1.0 << " ms" << std::endl;
   } else if (selectorType.compare("SEL_KNN") == 0) {
-    // k nearest neighbors (k=2)
+    // implement k-nearest-neighbor matching
+    double t = static_cast<double>(cv::getTickCount());
 
-    // TODO(a-ngo): implement k-nearest-neighbor matching
+    // k nearest neighbors (k=2) -> finds the two best matches for each
+    // descriptor
+    int k = 2;
+    matcher->knnMatch(descSource, descRef, knn_matches, k);
 
     // TODO(a-ngo): filter matches using descriptor distance ratio test
+    for (size_t i = 0; i < knn_matches.size(); ++i) {
+      // calculate ratio between descriptor distances to best and second-best
+      // match
+
+      // apply tresholds - of 0.8 - to sort out matches -> to keep match or
+      // remove it
+    }
+
+    // TODO(a-ngo): write result to matches?
+
+    t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+    std::cout << " (NN) with n=" << knn_matches.size() << " matches in "
+              << 1000 * t / 1.0 << " ms" << std::endl;
   }
 
   // visualize results
@@ -68,18 +87,34 @@ int main() {
   cv::Mat imgSource = cv::imread("../images/img1gray.png");
   cv::Mat imgRef = cv::imread("../images/img2gray.png");
 
+  std::string data = "BRISK_large";
+  data = "BRISK_small";
+  // data = "SIFT"; // TODO(a-ngo): why not working?
+
   std::vector<cv::KeyPoint> kptsSource, kptsRef;
-  readKeypoints("../dat/C35A5_KptsSource_BRISK_large.dat", kptsSource);
-  readKeypoints("../dat/C35A5_KptsRef_BRISK_large.dat", kptsRef);
+  readKeypoints(std::string("../dat/C35A5_KptsSource_" + data + ".dat").c_str(),
+                kptsSource);
+  readKeypoints(std::string("../dat/C35A5_KptsRef_" + data + ".dat").c_str(),
+                kptsRef);
 
   cv::Mat descSource, descRef;
-  readDescriptors("../dat/C35A5_DescSource_BRISK_large.dat", descSource);
-  readDescriptors("../dat/C35A5_DescRef_BRISK_large.dat", descRef);
+  readDescriptors(
+      std::string("../dat/C35A5_DescSource_" + data + ".dat").c_str(),
+      descSource);
+  readDescriptors(std::string("../dat/C35A5_DescRef_" + data + ".dat").c_str(),
+                  descRef);
 
   std::vector<cv::DMatch> matches;
+
+  // MAT_BF or MAT_FLANN
   std::string matcherType = "MAT_BF";
+  matcherType = "MAT_FLANN";
+
+  // NORM_HAMMING or NORM_L2
   std::string descriptorType = "DES_BINARY";
-  std::string selectorType = "SEL_NN";
+
+  // SEL_NN or SEL_KNN
+  std::string selectorType = "SEL_KNN";
   matchDescriptors(imgSource, imgRef, kptsSource, kptsRef, descSource, descRef,
                    matches, descriptorType, matcherType, selectorType);
 }
