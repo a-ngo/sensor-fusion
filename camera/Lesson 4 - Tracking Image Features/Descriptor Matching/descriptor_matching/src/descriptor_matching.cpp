@@ -91,9 +91,10 @@ int main() {
   cv::Mat img_source = cv::imread("../images/img1gray.png");
   cv::Mat img_ref = cv::imread("../images/img2gray.png");
 
+  // choose descriptor set
   std::string data = "BRISK_large";
-  data = "BRISK_small";
-  // data = "SIFT"; // TODO(a-ngo): why not working?
+  // data = "BRISK_small";
+  data = "SIFT";
 
   std::vector<cv::KeyPoint> kpts_source, kpts_ref;
   readKeypoints(std::string("../dat/C35A5_KptsSource_" + data + ".dat").c_str(),
@@ -110,6 +111,7 @@ int main() {
 
   std::vector<cv::DMatch> matches;
 
+  // choose method
   // MAT_BF or MAT_FLANN
   std::string matcher_type = "MAT_BF";
   matcher_type = "MAT_FLANN";
