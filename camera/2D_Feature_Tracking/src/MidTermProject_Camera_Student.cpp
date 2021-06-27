@@ -35,7 +35,7 @@ int main(int argc, const char *argv[]) {
       4; // no. of digits which make up the file index (e.g. img-0001.png)
 
   // misc
-  int data_wuffer_size = 2; // no. of images which are held in memory (ring
+  int data_buffer_size = 2; // no. of images which are held in memory (ring
                             // buffer) at the same time
   std::vector<DataFrame> data_buffer; // list of data frames which are held in
                                       // memory at the same time
@@ -60,12 +60,16 @@ int main(int argc, const char *argv[]) {
     cv::cvtColor(img, img_gray, cv::COLOR_BGR2GRAY);
 
     //// STUDENT ASSIGNMENT
-    //// TASK MP.1 -> replace the following code with ring buffer of size
-    /// dataBufferSize
+    //// TASK MP.1 -> replace the following code with ring buffer
+    ///               of size dataBufferSize
 
     // push image into data frame buffer
     DataFrame frame;
     frame.cameraImg = img_gray;
+
+    if (data_buffer.size() > data_buffer_size) {
+      data_buffer.erase(data_buffer.begin());
+    }
     data_buffer.push_back(frame);
 
     //// EOF STUDENT ASSIGNMENT
@@ -79,7 +83,7 @@ int main(int argc, const char *argv[]) {
     std::string detector_type = "SHITOMASI";
 
     //// STUDENT ASSIGNMENT
-    //// TASK MP.2 -> add the following keypoint detectors in file
+    //// TODO(a-ngo): TASK MP.2 -> add the following keypoint detectors in file
     /// matching2D.cpp and enable string-based selection based on detectorType /
     ///-> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
 
@@ -91,7 +95,7 @@ int main(int argc, const char *argv[]) {
     //// EOF STUDENT ASSIGNMENT
 
     //// STUDENT ASSIGNMENT
-    //// TASK MP.3 -> only keep keypoints on the preceding vehicle
+    //// TODO(a-ngo): TASK MP.3 -> only keep keypoints on the preceding vehicle
 
     // only keep keypoints on the preceding vehicle
     bool b_focus_on_vehicle = true;
@@ -103,9 +107,10 @@ int main(int argc, const char *argv[]) {
     //// EOF STUDENT ASSIGNMENT
 
     // optional : limit number of keypoints (helpful for debugging and learning)
-    bool b_limit_kpts = false;
+    // TODO(a-ngo): set false after testing
+    bool b_limit_kpts = true;
     if (b_limit_kpts) {
-      int max_keypoints = 50;
+      int max_keypoints = 20;
 
       if (detector_type.compare("SHITOMASI") ==
           0) { // there is no response info, so keep the first 50 as they are
@@ -123,7 +128,8 @@ int main(int argc, const char *argv[]) {
     /* EXTRACT KEYPOINT DESCRIPTORS */
 
     //// STUDENT ASSIGNMENT
-    //// TASK MP.4 -> add the following descriptors in file matching2D.cpp and
+    //// TODO(a-ngo): TASK MP.4 -> add the following descriptors in file
+    /// matching2D.cpp and
     /// enable string-based selection based on descriptorType / -> BRIEF, ORB,
     /// FREAK, AKAZE, SIFT
 
@@ -151,8 +157,9 @@ int main(int argc, const char *argv[]) {
       std::string selector_type = "SEL_NN";       // SEL_NN, SEL_KNN
 
       //// STUDENT ASSIGNMENT
-      //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
-      //// TASK MP.6 -> add KNN match selection and perform descriptor distance
+      //// TODO(a-ngo): TASK MP.5 -> add FLANN matching in file matching2D.cpp
+      //// TODO(a-ngo): TASK MP.6 -> add KNN match selection and perform
+      /// descriptor distance
       /// ratio filtering with t=0.8 in file matching2D.cpp
 
       matchDescriptors((data_buffer.end() - 2)->keypoints,
