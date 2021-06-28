@@ -102,3 +102,86 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     cv::waitKey(0);
   }
 }
+
+void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
+                        bool b_vis) {
+  // TODO(a-ngo): optimize parameters
+  // Detector parameters
+  int block_size = 2;
+  int aperture_size = 3;
+  int min_response = 100;
+  double k = 0.04;
+  // window size should be odd in order to center it on a pixel and have
+  // symmetry in all directions
+  int sliding_window_size = 7;
+  int sw_dist = std::floor(sliding_window_size / 2);
+
+  double t = static_cast<double>(cv::getTickCount());
+
+  cv::Mat dst, dst_norm, dst_norm_scaled;
+  dst = cv::Mat::zeros(img_gray.size(), CV_32FC1);
+  cv::cornerHarris(img_gray, dst, block_size, aperture_size, k,
+                   cv::BORDER_DEFAULT);
+
+  cv::normalize(dst, dst_norm, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
+  cv::convertScaleAbs(dst_norm, dst_norm_scaled);
+
+  for (size_t row = 0; row < dst_norm.rows; ++row) {
+    for (size_t col = 0; col < dst_norm.cols; ++col) {
+      int response = static_cast<int>(dst_norm.at<float>(row, col));
+      if (response > min_response) {
+        // VERSION A
+        // get max cornerness within local window
+        for (size_t local_row = row - sw_dist; local_row <= row + sw_dist;
+             local_row++) {
+          for (size_t local_col = col - sw_dist; local_col <= col + sw_dist;
+               local_col++) {
+            if (response < dst_norm.at<unsigned int>(local_row, local_col)) {
+              response = dst_norm.at<unsigned int>(local_row, local_col);
+            }
+          }
+        }
+
+        if (dst_norm.at<unsigned int>(row, col) != response) {
+          dst_norm.at<unsigned int>(row, col) = 0;
+        } else {
+          cv::KeyPoint new_key_point;
+          new_key_point.pt = cv::Point2f(col, row);
+          new_key_point.size = 2 * aperture_size;
+          new_key_point.response = response;
+          keypoints.push_back(new_key_point);
+        }
+      }
+    }
+  }
+  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+  std::cout << "HARRIS detection with n=" << keypoints.size()
+            << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+}
+
+void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
+                        std::string detector_type, bool b_vis) {
+  // TODO(a-ngo)
+  cv::Ptr<cv::FeatureDetector> detector;
+
+  // determine detector type
+  if (detector_type.compare("FAST") == 0) {
+    detector = cv::FastFeatureDetector::create();
+  } else if (detector_type.compare("BRISK") == 0) {
+    detector = cv::BRISK::create();
+  } else if (detector_type.compare("ORB") == 0) {
+    detector = cv::ORB::create();
+  } else if (detector_type.compare("AKAZE") == 0) {
+    detector = cv::AKAZE::create();
+  } else if (detector_type.compare("SIFT") == 0) {
+    detector = cv::SIFT::create();
+  }
+
+  double t = static_cast<double>(cv::getTickCount());
+
+  detector->detect(img_gray, keypoints);
+
+  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+  std::cout << detector_type << " detection with n=" << keypoints.size()
+            << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+}

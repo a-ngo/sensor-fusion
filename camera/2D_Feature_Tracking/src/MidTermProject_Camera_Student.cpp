@@ -78,9 +78,10 @@ int main(int argc, const char *argv[]) {
     /* DETECT IMAGE KEYPOINTS */
 
     // extract 2D keypoints from current image
-    std::vector<cv::KeyPoint>
-        keypoints; // create empty feature list for current image
+    // create empty feature list for current image
+    std::vector<cv::KeyPoint> keypoints;
     std::string detector_type = "SHITOMASI";
+    detector_type = "ORB";
 
     //// STUDENT ASSIGNMENT
     //// TODO(a-ngo): TASK MP.2 -> add the following keypoint detectors in file
@@ -88,10 +89,19 @@ int main(int argc, const char *argv[]) {
     ///-> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
 
     if (detector_type.compare("SHITOMASI") == 0) {
-      detKeypointsShiTomasi(keypoints, img_gray, false);
+      detKeypointsShiTomasi(keypoints, img_gray, b_vis);
+    } else if (detector_type.compare("HARRIS") == 0) {
+      detKeypointsHarris(keypoints, img_gray, b_vis);
+    } else if (detector_type.compare("FAST") == 0 ||
+               detector_type.compare("BRISK") == 0 ||
+               detector_type.compare("ORB") == 0 ||
+               detector_type.compare("AKAZE") == 0 ||
+               detector_type.compare("SIFT") == 0) {
+      detKeypointsModern(keypoints, img_gray, detector_type);
     } else {
-      //...
+      std::cerr << detector_type << " not supported!" << std::endl;
     }
+
     //// EOF STUDENT ASSIGNMENT
 
     //// STUDENT ASSIGNMENT
@@ -108,7 +118,7 @@ int main(int argc, const char *argv[]) {
 
     // optional : limit number of keypoints (helpful for debugging and learning)
     // TODO(a-ngo): set false after testing
-    bool b_limit_kpts = true;
+    bool b_limit_kpts = false;
     if (b_limit_kpts) {
       int max_keypoints = 20;
 
