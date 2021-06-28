@@ -82,7 +82,7 @@ int main(int argc, const char *argv[]) {
     // create empty feature list for current image
     std::vector<cv::KeyPoint> keypoints;
     std::string detector_type = "SHITOMASI";
-    detector_type = "ORB";
+    detector_type = "BRISK";
 
     //// STUDENT ASSIGNMENT
     //// TASK MP.2 -> add the following keypoint detectors in file
@@ -106,7 +106,7 @@ int main(int argc, const char *argv[]) {
     //// EOF STUDENT ASSIGNMENT
 
     //// STUDENT ASSIGNMENT
-    //// TODO(a-ngo): TASK MP.3 -> only keep keypoints on the preceding vehicle
+    //// TASK MP.3 -> only keep keypoints on the preceding vehicle
 
     // only keep keypoints on the preceding vehicle
     std::vector<size_t> keypoint_indices_outside_rect;
@@ -126,15 +126,15 @@ int main(int argc, const char *argv[]) {
       std::cout << "Found " << keypoint_indices_outside_rect.size()
                 << " outlier!" << std::endl;
 
-      // keypoints.erase(std::remove(keypoints.begin(), keypoints.end(),
-      //                             remove_helper(keypoint_indices_outside_rect)),
-      //                 keypoints.end());
-
       // remove outlier
       for (size_t idx = keypoint_indices_outside_rect.size(); idx-- > 0;) {
         keypoints.at(idx) = keypoints.back();
         keypoints.pop_back();
       }
+      // version B:
+      // keypoints.erase(std::remove(keypoints.begin(), keypoints.end(),
+      //                             remove_helper(keypoint_indices_outside_rect)),
+      //                 keypoints.end());
 
       std::cout << "Number of keypoints on preceding vehicle = "
                 << keypoints.size() << std::endl;
@@ -232,7 +232,6 @@ int main(int argc, const char *argv[]) {
       }
       b_vis = false;
     }
-
   } // eof loop over all images
 
   return 0;
