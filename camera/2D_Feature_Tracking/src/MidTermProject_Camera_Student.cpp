@@ -1,4 +1,5 @@
 /* INCLUDES FOR THIS PROJECT */
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -84,7 +85,7 @@ int main(int argc, const char *argv[]) {
     detector_type = "ORB";
 
     //// STUDENT ASSIGNMENT
-    //// TODO(a-ngo): TASK MP.2 -> add the following keypoint detectors in file
+    //// TASK MP.2 -> add the following keypoint detectors in file
     /// matching2D.cpp and enable string-based selection based on detectorType /
     ///-> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
 
@@ -97,7 +98,7 @@ int main(int argc, const char *argv[]) {
                detector_type.compare("ORB") == 0 ||
                detector_type.compare("AKAZE") == 0 ||
                detector_type.compare("SIFT") == 0) {
-      detKeypointsModern(keypoints, img_gray, detector_type);
+      detKeypointsModern(keypoints, img_gray, detector_type, b_vis);
     } else {
       std::cerr << detector_type << " not supported!" << std::endl;
     }
@@ -108,10 +109,35 @@ int main(int argc, const char *argv[]) {
     //// TODO(a-ngo): TASK MP.3 -> only keep keypoints on the preceding vehicle
 
     // only keep keypoints on the preceding vehicle
+    std::vector<size_t> keypoint_indices_outside_rect;
+
     bool b_focus_on_vehicle = true;
     cv::Rect vehicleRect(535, 180, 180, 150);
     if (b_focus_on_vehicle) {
-      // ...
+      // TODO(a-ngo): necessary to separate finding and erasing outlier?
+      // find outlier
+      for (size_t keypoint_ind = 0; keypoint_ind < keypoints.size();
+           ++keypoint_ind) {
+        if (!keypoints.at(keypoint_ind).pt.inside(vehicleRect)) {
+          keypoint_indices_outside_rect.push_back(keypoint_ind);
+        }
+      }
+
+      std::cout << "Found " << keypoint_indices_outside_rect.size()
+                << " outlier!" << std::endl;
+
+      // keypoints.erase(std::remove(keypoints.begin(), keypoints.end(),
+      //                             remove_helper(keypoint_indices_outside_rect)),
+      //                 keypoints.end());
+
+      // remove outlier
+      for (size_t idx = keypoint_indices_outside_rect.size(); idx-- > 0;) {
+        keypoints.at(idx) = keypoints.back();
+        keypoints.pop_back();
+      }
+
+      std::cout << "Number of keypoints on preceding vehicle = "
+                << keypoints.size() << std::endl;
     }
 
     //// EOF STUDENT ASSIGNMENT

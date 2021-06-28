@@ -97,7 +97,7 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     cv::drawKeypoints(img, keypoints, vis_image, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
     std::string window_name = "Shi-Tomasi Corner Detector Results";
-    cv::namedWindow(window_name, 6);
+    cv::namedWindow(window_name, 1);
     imshow(window_name, vis_image);
     cv::waitKey(0);
   }
@@ -157,6 +157,17 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
   std::cout << "HARRIS detection with n=" << keypoints.size()
             << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+
+  // visualize results
+  if (b_vis) {
+    cv::Mat vis_image = img_gray.clone();
+    cv::drawKeypoints(img_gray, keypoints, vis_image, cv::Scalar::all(-1),
+                      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    std::string window_name = "Harris Corner Detector Results";
+    cv::namedWindow(window_name, 1);
+    imshow(window_name, vis_image);
+    cv::waitKey(0);
+  }
 }
 
 void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
@@ -184,4 +195,15 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
   std::cout << detector_type << " detection with n=" << keypoints.size()
             << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+
+  // visualize results
+  if (b_vis) {
+    cv::Mat vis_image = img_gray.clone();
+    cv::drawKeypoints(img_gray, keypoints, vis_image, cv::Scalar::all(-1),
+                      cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    std::string window_name = "detector_type Detector Results";
+    cv::namedWindow(window_name, 1);
+    imshow(window_name, vis_image);
+    cv::waitKey(0);
+  }
 }
