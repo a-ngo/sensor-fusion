@@ -20,6 +20,13 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
                         : cv::NORM_L2;
     matcher = cv::BFMatcher::create(norm_type, cross_check);
   } else if (matcher_type.compare("MAT_FLANN") == 0) {
+    if (desc_source.type() !=
+        CV_32F) { // OpenCV bug workaround : convert binary
+                  // descriptors to floating point due to a
+                  // bug in current OpenCV implementation
+      desc_source.convertTo(desc_source, CV_32F);
+      desc_ref.convertTo(desc_ref, CV_32F);
+    }
     matcher = cv::FlannBasedMatcher::create();
   }
 
