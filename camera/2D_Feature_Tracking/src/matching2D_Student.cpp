@@ -13,22 +13,40 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
   bool cross_check = false;
   cv::Ptr<cv::DescriptorMatcher> matcher;
 
+  // matcher type
   if (matcher_type.compare("MAT_BF") == 0) {
-    int norm_type = cv::NORM_HAMMING;
+    int norm_type = descriptor_type.compare("DES_BINARY") == 0
+                        ? cv::NORM_HAMMING
+                        : cv::NORM_L2;
     matcher = cv::BFMatcher::create(norm_type, cross_check);
   } else if (matcher_type.compare("MAT_FLANN") == 0) {
-    // ...
+    matcher = cv::FlannBasedMatcher::create();
   }
 
   // perform matching task
-  if (selector_type.compare("SEL_NN") == 0) { // nearest neighbor (best match)
-    matcher->match(
-        desc_source, desc_ref,
-        matches); // Finds the best match for each descriptor in desc1
-  } else if (selector_type.compare("SEL_KNN") ==
-             0) { // k nearest neighbors (k=2)
+  // nearest neighbor (best match)
+  if (selector_type.compare("SEL_NN") == 0) {
+    // Finds the best match for each descriptor in desc1
+    matcher->match(desc_source, desc_ref, matches);
+  } else if (selector_type.compare("SEL_KNN") == 0) {
+    // k nearest neighbors (k=2)
+    int k = 2;
+    const double kThreshold = 0.8;
+    std::vector<std::vector<cv::DMatch>> knn_matches;
+    matcher->knnMatch(desc_source, desc_ref, knn_matches, k);
 
-    // ...
+    // filter matches using descriptor distance ratio test
+    for (size_t i = 0; i < knn_matches.size(); ++i) {
+      // calculate ratio between descriptor distances to best and second - best
+      // match
+      double ratio = knn_matches[i][0].distance / knn_matches[i][1].distance;
+
+      // if ratio higher then threshold -> ambiguous
+      if (ratio < kThreshold) {
+        // push back best fitted descriptor
+        matches.push_back(knn_matches[i][0]);
+      }
+    }
   }
 }
 
@@ -37,7 +55,6 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
 void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
                    cv::Mat &descriptors, std::string descriptor_type) {
   // select appropriate descriptor
-  // TODO(a-ngo): let default parameters or tune?
   cv::Ptr<cv::DescriptorExtractor> extractor;
   if (descriptor_type.compare("BRISK") == 0) {
     int threshold = 30;        // FAST/AGAST detection threshold score.
@@ -115,7 +132,6 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
 
 void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
                         bool b_vis) {
-  // TODO(a-ngo): optimize parameters
   // Detector parameters
   int block_size = 2;
   int aperture_size = 3;
@@ -182,7 +198,6 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
 
 void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
                         std::string detector_type, bool b_vis) {
-  // TODO(a-ngo)
   cv::Ptr<cv::FeatureDetector> detector;
 
   // determine detector type

@@ -191,10 +191,9 @@ int main(int argc, const char *argv[]) {
       std::string selector_type = "SEL_NN";       // SEL_NN, SEL_KNN
 
       //// STUDENT ASSIGNMENT
-      //// TODO(a-ngo): TASK MP.5 -> add FLANN matching in file matching2D.cpp
-      //// TODO(a-ngo): TASK MP.6 -> add KNN match selection and perform
-      /// descriptor distance
-      /// ratio filtering with t=0.8 in file matching2D.cpp
+      //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
+      //// TASK MP.6 -> add KNN match selection and perform
+      /// descriptor distance ratio filtering with t=0.8 in file matching2D.cpp
 
       matchDescriptors((data_buffer.end() - 2)->keypoints,
                        (data_buffer.end() - 1)->keypoints,
