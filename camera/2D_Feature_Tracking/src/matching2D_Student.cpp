@@ -37,24 +37,34 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
 void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
                    cv::Mat &descriptors, std::string descriptor_type) {
   // select appropriate descriptor
+  // TODO(a-ngo): let default parameters or tune?
   cv::Ptr<cv::DescriptorExtractor> extractor;
   if (descriptor_type.compare("BRISK") == 0) {
-
     int threshold = 30;        // FAST/AGAST detection threshold score.
     int octaves = 3;           // detection octaves (use 0 to do single scale)
     float patternScale = 1.0f; // apply this scale to the pattern used for
                                // sampling the neighbourhood of a keypoint.
-
     extractor = cv::BRISK::create(threshold, octaves, patternScale);
-  } else {
+  } else if (descriptor_type.compare("BRIEF") == 0) {
+    extractor = cv::xfeatures2d::BriefDescriptorExtractor::create();
 
-    //...
+  } else if (descriptor_type.compare("ORB") == 0) {
+    extractor = cv::ORB::create();
+
+  } else if (descriptor_type.compare("FREAK") == 0) {
+    extractor = cv::xfeatures2d::FREAK::create();
+
+  } else if (descriptor_type.compare("AKAZE") == 0) {
+    extractor = cv::AKAZE::create();
+
+  } else if (descriptor_type.compare("SIFT") == 0) {
+    extractor = cv::SIFT::create();
   }
 
   // perform feature description
-  double t = (double)cv::getTickCount();
+  double t = static_cast<double>(cv::getTickCount());
   extractor->compute(img, keypoints, descriptors);
-  t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
   std::cout << descriptor_type << " descriptor extraction in " << 1000 * t / 1.0
             << " ms" << std::endl;
 }

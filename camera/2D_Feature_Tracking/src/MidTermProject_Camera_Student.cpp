@@ -82,7 +82,7 @@ int main(int argc, const char *argv[]) {
     // create empty feature list for current image
     std::vector<cv::KeyPoint> keypoints;
     std::string detector_type = "SHITOMASI";
-    detector_type = "BRISK";
+    detector_type = "ORB";
 
     //// STUDENT ASSIGNMENT
     //// TASK MP.2 -> add the following keypoint detectors in file
@@ -114,7 +114,6 @@ int main(int argc, const char *argv[]) {
     bool b_focus_on_vehicle = true;
     cv::Rect vehicleRect(535, 180, 180, 150);
     if (b_focus_on_vehicle) {
-      // TODO(a-ngo): necessary to separate finding and erasing outlier?
       // find outlier
       for (size_t keypoint_ind = 0; keypoint_ind < keypoints.size();
            ++keypoint_ind) {
@@ -164,13 +163,14 @@ int main(int argc, const char *argv[]) {
     /* EXTRACT KEYPOINT DESCRIPTORS */
 
     //// STUDENT ASSIGNMENT
-    //// TODO(a-ngo): TASK MP.4 -> add the following descriptors in file
+    //// TASK MP.4 -> add the following descriptors in file
     /// matching2D.cpp and
     /// enable string-based selection based on descriptorType / -> BRIEF, ORB,
     /// FREAK, AKAZE, SIFT
 
+    // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
     cv::Mat descriptors;
-    std::string descriptor_type = "BRISK"; // BRIEF, ORB, FREAK, AKAZE, SIFT
+    std::string descriptor_type = "ORB";
     descKeypoints((data_buffer.end() - 1)->keypoints,
                   (data_buffer.end() - 1)->cameraImg, descriptors,
                   descriptor_type);
@@ -181,10 +181,8 @@ int main(int argc, const char *argv[]) {
 
     std::cout << "#3 : EXTRACT DESCRIPTORS done" << std::endl;
 
-    if (data_buffer.size() >
-        1) // wait until at least two images have been processed
-    {
-
+    // wait until at least two images have been processed
+    if (data_buffer.size() > 1) {
       /* MATCH KEYPOINT DESCRIPTORS */
 
       std::vector<cv::DMatch> matches;
