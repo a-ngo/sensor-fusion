@@ -1,5 +1,7 @@
 /* INCLUDES FOR THIS PROJECT */
 #include <algorithm>
+#include <array>
+#include <cassert>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -41,6 +43,16 @@ int main(int argc, const char *argv[]) {
   std::vector<DataFrame> data_buffer; // list of data frames which are held in
                                       // memory at the same time
   bool b_vis = false;                 // visualize results
+
+  std::array<size_t, 10> preceding_vehicle_keypoints;
+  std::array<size_t, 10> matches_number;
+  std::array<double, 10> keypoint_detection_time;
+  std::array<double, 10> descriptor_extraction_time;
+  std::array<double, 10> matching_time;
+
+  // TODO(a-ngo): loop over all combinations and write results to a file?
+  std::vector<std::string> detector_types;
+  std::vector<std::string> descriptor_types;
 
   /* MAIN LOOP OVER ALL IMAGES */
 
@@ -88,6 +100,7 @@ int main(int argc, const char *argv[]) {
     //// TASK MP.2 -> add the following keypoint detectors in file
     /// matching2D.cpp and enable string-based selection based on detectorType /
     ///-> HARRIS, FAST, BRISK, ORB, AKAZE, SIFT
+    double t = static_cast<double>(cv::getTickCount());
 
     if (detector_type.compare("SHITOMASI") == 0) {
       detKeypointsShiTomasi(keypoints, img_gray, b_vis);
@@ -102,6 +115,9 @@ int main(int argc, const char *argv[]) {
     } else {
       std::cerr << detector_type << " not supported!" << std::endl;
     }
+
+    t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+    keypoint_detection_time[img_index] = t;
 
     //// EOF STUDENT ASSIGNMENT
 
@@ -134,6 +150,9 @@ int main(int argc, const char *argv[]) {
       // keypoints.erase(std::remove(keypoints.begin(), keypoints.end(),
       //                             remove_helper(keypoint_indices_outside_rect)),
       //                 keypoints.end());
+
+      // preceding_vehicle_keypoints.push_back(keypoints.size());
+      preceding_vehicle_keypoints[img_index] = keypoints.size();
 
       std::cout << "Number of keypoints on preceding vehicle = "
                 << keypoints.size() << std::endl;
@@ -171,9 +190,12 @@ int main(int argc, const char *argv[]) {
     // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
     cv::Mat descriptors;
     std::string descriptor_type = "ORB";
+    t = static_cast<double>(cv::getTickCount());
     descKeypoints((data_buffer.end() - 1)->keypoints,
                   (data_buffer.end() - 1)->cameraImg, descriptors,
                   descriptor_type);
+    t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+    descriptor_extraction_time[img_index] = t;
     //// EOF STUDENT ASSIGNMENT
 
     // push descriptors for current frame to end of data buffer
@@ -184,32 +206,35 @@ int main(int argc, const char *argv[]) {
     // wait until at least two images have been processed
     if (data_buffer.size() > 1) {
       /* MATCH KEYPOINT DESCRIPTORS */
-
       std::vector<cv::DMatch> matches;
       std::string matcher_type = "MAT_BF";        // MAT_BF, MAT_FLANN
       std::string descriptor_type = "DES_BINARY"; // DES_BINARY, DES_HOG
-      std::string selector_type = "SEL_NN";       // SEL_NN, SEL_KNN
+      std::string selector_type = "SEL_KNN";      // SEL_NN, SEL_KNN
 
       //// STUDENT ASSIGNMENT
       //// TASK MP.5 -> add FLANN matching in file matching2D.cpp
       //// TASK MP.6 -> add KNN match selection and perform
       /// descriptor distance ratio filtering with t=0.8 in file matching2D.cpp
-
+      t = static_cast<double>(cv::getTickCount());
       matchDescriptors((data_buffer.end() - 2)->keypoints,
                        (data_buffer.end() - 1)->keypoints,
                        (data_buffer.end() - 2)->descriptors,
                        (data_buffer.end() - 1)->descriptors, matches,
                        descriptor_type, matcher_type, selector_type);
-
+      t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
+      matching_time[img_index] = t;
       //// EOF STUDENT ASSIGNMENT
 
       // store matches in current data frame
       (data_buffer.end() - 1)->kptMatches = matches;
 
+      // matches_number.push_back(matches.size());
+      matches_number[img_index] = matches.size();
+
       std::cout << "#4 : MATCH KEYPOINT DESCRIPTORS done" << std::endl;
 
       // visualize matches between current and previous image
-      b_vis = true;
+      // b_vis = true;
       if (b_vis) {
         cv::Mat match_img = ((data_buffer.end() - 1)->cameraImg).clone();
         cv::drawMatches((data_buffer.end() - 2)->cameraImg,
@@ -225,11 +250,48 @@ int main(int argc, const char *argv[]) {
         cv::namedWindow(window_name, 7);
         cv::imshow(window_name, match_img);
         std::cout << "Press key to continue to next image" << std::endl;
-        cv::waitKey(0); // wait for key to be pressed
+        cv::waitKey(0);
       }
       b_vis = false;
     }
-  } // eof loop over all images
+  }
+
+  std::cout << "\n############\n";
+
+  // TODO(a-ngo): grasp all combinations of detectors and descriptors
+
+  // TASK MP.7: count number of keypoints on the preceding vehicle for all
+  //            detectors
+  // TODO(a-ngo): and take note of the distribution of their neighborhood size?
+
+  std::cout << "Keypoints found on the preceding vehicle: " << std::endl;
+  for (size_t frame{0}; frame <= img_end_index; frame++) {
+    std::cout << "Frame " << frame << " : " << std::endl;
+
+    std::cout << "Keypoint number: " << preceding_vehicle_keypoints[frame]
+              << std::endl;
+    std::cout << "Match number: " << matches_number[frame] << std::endl;
+    std::cout << "Diff: "
+              << preceding_vehicle_keypoints[frame] - matches_number[frame]
+              << std::endl;
+
+    std::cout << "Keypoint detection time: " << keypoint_detection_time[frame]
+              << std::endl;
+    std::cout << "Descriptor Extraction Time: "
+              << descriptor_extraction_time[frame] << std::endl;
+    std::cout << "Matching Time: " << matching_time[frame] << std::endl;
+    std::cout << "Total: "
+              << keypoint_detection_time[frame] +
+                     descriptor_extraction_time[frame] + matching_time[frame]
+              << "\n"
+              << std::endl;
+  }
+
+  // TODO(a-ngo): TASK MP.8: count number of matchey keypoints using all
+  //            possible combinations of detectors and descriptors.
+  //            -> use BF approach with ratio 0.8
+
+  // TODO(a-ngo): TASK MP.9: log computation time of all combinations
 
   return 0;
 }
