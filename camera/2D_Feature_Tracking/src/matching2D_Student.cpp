@@ -1,5 +1,6 @@
 #include "matching2D.hpp"
 #include <numeric>
+#include <opencv2/core/hal/interface.h>
 
 // Find best matches for keypoints in two camera images based on several
 // matching methods
@@ -7,7 +8,7 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
                       std::vector<cv::KeyPoint> &k_pts_ref,
                       cv::Mat &desc_source, cv::Mat &desc_ref,
                       std::vector<cv::DMatch> &matches,
-                      std::string descriptor_type, std::string matcher_type,
+                      std::string distance_type, std::string matcher_type,
                       std::string selector_type) {
   // configure matcher
   bool cross_check = false;
@@ -15,9 +16,14 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
 
   // matcher type
   if (matcher_type.compare("MAT_BF") == 0) {
-    int norm_type = descriptor_type.compare("DES_BINARY") == 0
-                        ? cv::NORM_HAMMING
-                        : cv::NORM_L2;
+    // TODO(a-ngo): necessary to convert to cv_8u?
+    // if (desc_source.type() != CV_8U || desc_ref.type() != CV_8U) {
+    //   desc_source.convertTo(desc_source, CV_8U);
+    //   desc_ref.convertTo(desc_ref, CV_8U);
+    // }
+    int norm_type = distance_type.compare("DES_BINARY") == 0 ? cv::NORM_HAMMING
+                                                             : cv::NORM_L2;
+
     matcher = cv::BFMatcher::create(norm_type, cross_check);
   } else if (matcher_type.compare("MAT_FLANN") == 0) {
     if (desc_source.type() !=
@@ -89,8 +95,9 @@ void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   double t = static_cast<double>(cv::getTickCount());
   extractor->compute(img, keypoints, descriptors);
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  std::cout << descriptor_type << " descriptor extraction in " << 1000 * t / 1.0
-            << " ms" << std::endl;
+  // std::cout << descriptor_type << " descriptor extraction in " << 1000 * t
+  // / 1.0
+  //           << " ms" << std::endl;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -122,8 +129,8 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     keypoints.push_back(new_key_point);
   }
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  std::cout << "Shi-Tomasi detection with n=" << keypoints.size()
-            << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+  // std::cout << "Shi-Tomasi detection with n=" << keypoints.size()
+  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
@@ -188,8 +195,8 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
     }
   }
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  std::cout << "HARRIS detection with n=" << keypoints.size()
-            << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+  // std::cout << "HARRIS detection with n=" << keypoints.size()
+  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
@@ -225,8 +232,8 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
   detector->detect(img_gray, keypoints);
 
   t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  std::cout << detector_type << " detection with n=" << keypoints.size()
-            << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
+  // std::cout << detector_type << " detection with n=" << keypoints.size()
+  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
