@@ -48,33 +48,40 @@ int main(int argc, const char *argv[]) {
   // misc
   int data_buffer_size = 2; // no. of images which are held in memory (ring
                             // buffer) at the same time
-  std::vector<DataFrame> data_buffer; // list of data frames which are held in
-                                      // memory at the same time
-  bool b_vis = false;                 // visualize results
+
+  bool b_vis = false; // visualize results
 
   size_t preceding_vehicle_keypoints{0};
   size_t matches_number{0};
   double keypoint_detection_time{0};
   double descriptor_extraction_time{0};
 
-  // all
-  // std::vector<std::string> detector_types{"HARRIS", "FAST",  "BRISK",
-  //                                         "ORB",    "AKAZE", "SIFT"};
-  // std::vector<std::string> descriptor_types{"BRISK", "BRIEF", "ORB",
-  //                                           "FREAK", "AKAZE", "SIFT"};
-  std::vector<std::string> detector_types{"HARRIS", "FAST", "BRISK", "ORB"};
-  std::vector<std::string> descriptor_types{"BRISK", "BRIEF", "ORB", "FREAK"};
+  std::vector<std::string> detector_types{"HARRIS", "FAST", "BRISK",
+                                          "ORB",    "SIFT", "AKAZE"};
+  std::vector<std::string> descriptor_types{"BRISK", "BRIEF", "ORB",
+                                            "FREAK", "SIFT",  "AKAZE"};
 
   for (const auto &detector_type : detector_types) {
     for (const auto &descriptor_type : descriptor_types) {
-      // TODO(a-ngo): skip incompatible combinations
-      // if (detector_type.compare("HARRIS") ==)
+      // skip incompatible detector and descriptor combinations
+      if (detector_type.compare("AKAZE") == 0 &&
+              descriptor_type.compare("AKAZE") != 0 ||
+          detector_type.compare("AKAZE") != 0 &&
+              descriptor_type.compare("AKAZE") == 0) {
+        continue;
+      }
 
-      // reset metrics
+      if (detector_type.compare("SIFT") == 0 &&
+          descriptor_type.compare("ORB") == 0) {
+        continue;
+      }
+
+      // reset metrics and buffer
       preceding_vehicle_keypoints = 0;
       matches_number = 0;
       keypoint_detection_time = 0;
       descriptor_extraction_time = 0;
+      std::vector<DataFrame> data_buffer;
 
       std::cout << "Detection/descriptor combi: ";
       std::cout << detector_type << " " << descriptor_type << std::endl;
@@ -215,11 +222,8 @@ int main(int argc, const char *argv[]) {
           /* MATCH KEYPOINT DESCRIPTORS */
           std::vector<cv::DMatch> matches;
           std::string matcher_type = "MAT_BF"; // MAT_BF, MAT_FLANN
-
-          // TODO(a-ngo): fix
           std::string distance_type =
               (descriptor_type.compare("SIFT") == 0) ? "DES_HOG" : "DES_BINARY";
-
           std::string selector_type = "SEL_KNN"; // SEL_NN, SEL_KNN
 
           //// STUDENT ASSIGNMENT
@@ -266,7 +270,7 @@ int main(int argc, const char *argv[]) {
       std::cout << "Keypoints: " << preceding_vehicle_keypoints << std::endl;
       std::cout << "Matched keypoints: " << matches_number << std::endl;
       std::cout << "Time needed: " << std::setprecision(3)
-                << keypoint_detection_time + descriptor_extraction_time
+                << keypoint_detection_time + descriptor_extraction_time << "\n"
                 << std::endl;
     }
   }

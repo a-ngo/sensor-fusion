@@ -1,5 +1,6 @@
 #include "matching2D.hpp"
 #include <numeric>
+#include <opencv2/core/base.hpp>
 #include <opencv2/core/hal/interface.h>
 
 // Find best matches for keypoints in two camera images based on several
@@ -16,11 +17,6 @@ void matchDescriptors(std::vector<cv::KeyPoint> &k_pts_source,
 
   // matcher type
   if (matcher_type.compare("MAT_BF") == 0) {
-    // TODO(a-ngo): necessary to convert to cv_8u?
-    // if (desc_source.type() != CV_8U || desc_ref.type() != CV_8U) {
-    //   desc_source.convertTo(desc_source, CV_8U);
-    //   desc_ref.convertTo(desc_ref, CV_8U);
-    // }
     int norm_type = distance_type.compare("DES_BINARY") == 0 ? cv::NORM_HAMMING
                                                              : cv::NORM_L2;
 
@@ -92,12 +88,7 @@ void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   }
 
   // perform feature description
-  double t = static_cast<double>(cv::getTickCount());
   extractor->compute(img, keypoints, descriptors);
-  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  // std::cout << descriptor_type << " descriptor extraction in " << 1000 * t
-  // / 1.0
-  //           << " ms" << std::endl;
 }
 
 // Detect keypoints in image using the traditional Shi-Thomasi detector
@@ -116,7 +107,6 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   double k = 0.04;
 
   // Apply corner detection
-  double t = static_cast<double>(cv::getTickCount());
   std::vector<cv::Point2f> corners;
   cv::goodFeaturesToTrack(img, corners, max_corners, quality_level,
                           min_distance, cv::Mat(), block_size, false, k);
@@ -128,9 +118,6 @@ void detKeypointsShiTomasi(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
     new_key_point.size = block_size;
     keypoints.push_back(new_key_point);
   }
-  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  // std::cout << "Shi-Tomasi detection with n=" << keypoints.size()
-  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
@@ -155,8 +142,6 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
   // symmetry in all directions
   int sliding_window_size = 7;
   int sw_dist = std::floor(sliding_window_size / 2);
-
-  double t = static_cast<double>(cv::getTickCount());
 
   cv::Mat dst, dst_norm, dst_norm_scaled;
   dst = cv::Mat::zeros(img_gray.size(), CV_32FC1);
@@ -194,9 +179,6 @@ void detKeypointsHarris(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
       }
     }
   }
-  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  // std::cout << "HARRIS detection with n=" << keypoints.size()
-  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
@@ -227,13 +209,7 @@ void detKeypointsModern(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img_gray,
     detector = cv::SIFT::create();
   }
 
-  double t = static_cast<double>(cv::getTickCount());
-
   detector->detect(img_gray, keypoints);
-
-  t = static_cast<double>(cv::getTickCount() - t) / cv::getTickFrequency();
-  // std::cout << detector_type << " detection with n=" << keypoints.size()
-  //           << " keypoints in " << 1000 * t / 1.0 << " ms" << std::endl;
 
   // visualize results
   if (b_vis) {
