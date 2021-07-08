@@ -6,50 +6,55 @@
 
 #include "structIO.hpp"
 
-using namespace std;
-
 void showLidarTopview() {
-  std::vector<LidarPoint> lidarPoints;
-  readLidarPts("../dat/C51_LidarPts_0000.dat", lidarPoints);
+  std::vector<LidarPoint> lidar_points;
+  readLidarPts("../dat/C51_LidarPts_0000.dat", lidar_points);
 
-  cv::Size worldSize(10.0, 20.0); // width and height of sensor field in m
-  cv::Size imageSize(1000, 2000); // corresponding top view image in pixel
+  // width and height of sensor field in m
+  cv::Size world_size(10.0, 20.0);
+
+  // corresponding top view image in pixel
+  cv::Size image_size(1000, 2000);
 
   // create topview image
-  cv::Mat topviewImg(imageSize, CV_8UC3, cv::Scalar(0, 0, 0));
+  cv::Mat top_view_img(image_size, CV_8UC3, cv::Scalar(0, 0, 0));
 
   // plot Lidar points into image
-  for (auto it = lidarPoints.begin(); it != lidarPoints.end(); ++it) {
-    float xw = (*it).x; // world position in m with x facing forward from sensor
-    float yw = (*it).y; // world position in m with y facing left from sensor
+  for (auto it = lidar_points.begin(); it != lidar_points.end(); ++it) {
+    // x facing forward and y left from sensor in m (world position)
+    float xw = (*it).x;
+    float yw = (*it).y;
 
-    int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
-    int x = (-yw * imageSize.width / worldSize.width) + imageSize.width / 2;
+    int y = (-xw * image_size.height / world_size.height) + image_size.height;
+    int x =
+        (-yw * image_size.width / world_size.width) + image_size.width / 2.0;
 
-    cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, 0, 255), -1);
-
-    // TODO:
-    // 1. Change the color of the Lidar points such that
+    // TODO(a-ngo): 1. Change the color of the Lidar points such that
     // X=0.0m corresponds to red while X=20.0m is shown as green.
-    // 2. Remove all Lidar points on the road surface while preserving
-    // measurements on the obstacles in the scene.
+    int g = 0.0 + xw / 20.0 * 255.0;
+    int r = 255.0 - xw / 20.0 * 255.0;
+
+    cv::circle(top_view_img, cv::Point(x, y), 5, cv::Scalar(0, g, r), -1);
+
+    // TODO(a-ngo): 2. Remove all Lidar points on the road surface while
+    // preserving measurements on the obstacles in the scene.
   }
 
   // plot distance markers
-  float lineSpacing = 2.0; // gap between distance markers
-  int nMarkers = floor(worldSize.height / lineSpacing);
-  for (size_t i = 0; i < nMarkers; ++i) {
-    int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) +
-            imageSize.height;
-    cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y),
+  float line_spacing = 2.0; // gap between distance markers
+  int markers_number = floor(world_size.height / line_spacing);
+  for (size_t i = 0; i < markers_number; ++i) {
+    int y = (-(i * line_spacing) * image_size.height / world_size.height) +
+            image_size.height;
+    cv::line(top_view_img, cv::Point(0, y), cv::Point(image_size.width, y),
              cv::Scalar(255, 0, 0));
   }
 
   // display image
-  string windowName = "Top-View Perspective of LiDAR data";
-  cv::namedWindow(windowName, 2);
-  cv::imshow(windowName, topviewImg);
-  cv::waitKey(0); // wait for key to be pressed
+  std::string window_name = "Top-View Perspective of LiDAR data";
+  cv::namedWindow(window_name, cv::WINDOW_FREERATIO);
+  cv::imshow(window_name, top_view_img);
+  cv::waitKey(0);
 }
 
 int main() { showLidarTopview(); }
