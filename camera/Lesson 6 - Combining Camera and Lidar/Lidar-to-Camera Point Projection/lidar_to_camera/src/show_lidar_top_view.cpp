@@ -40,6 +40,10 @@ void showLidarTopview() {
     int g = 0.0 + xw / 20.0 * 255.0;
     int r = 255.0 - xw / 20.0 * 255.0;
 
+    // color coding via reflectivity
+    // int g = 0.0 + (*it).r * 255.0;
+    // int r = 255.0 - (*it).r * 255.0;
+
     cv::circle(top_view_img, cv::Point(x, y), 5, cv::Scalar(0, g, r), -1);
   }
 
