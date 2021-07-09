@@ -10,7 +10,9 @@
 
 void detectObjects2() {
   // load image from file
-  cv::Mat img = cv::imread("../images/s_thrun.jpg");
+  // cv::Mat img = cv::imread("../images/s_thrun.jpg");
+  // cv::Mat img = cv::imread("../images/0000000000.png");
+  cv::Mat img = cv::imread("../images/times_square.jpg");
 
   // load class names from file
   std::string yoloBasePath = "../dat/yolo/";
@@ -28,9 +30,11 @@ void detectObjects2() {
   cv::dnn::Net net =
       cv::dnn::readNetFromDarknet(yoloModelConfiguration, yoloModelWeights);
   net.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+
+  // with gpu set DNN_TARGET_OPENCL
   net.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
 
-  // generate 4D blob from input image
+  // generate 4D blob from input image to feed to network
   cv::Mat blob;
   double scalefactor = 1 / 255.0;
   cv::Size size = cv::Size(416, 416);
