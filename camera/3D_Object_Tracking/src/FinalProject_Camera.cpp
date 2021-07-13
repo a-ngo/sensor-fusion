@@ -187,11 +187,12 @@ int main(int argc, const char *argv[]) {
 
     std::cout << "#4 : CLUSTER LIDAR POINT CLOUD done" << std::endl;
 
-    // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
+    // TODO(a-ngo): REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
     continue; // skips directly to the next image without processing what comes
               // beneath
 
     /* DETECT IMAGE KEYPOINTS */
+    // TODO(a-ngo): add code from midterm project
 
     // convert current image to grayscale
     cv::Mat imgGray;
@@ -201,12 +202,20 @@ int main(int argc, const char *argv[]) {
     // extract 2D keypoints from current image
     std::vector<cv::KeyPoint>
         keypoints; // create empty feature list for current image
-    std::string detectorType = "SHITOMASI";
+    std::string detector_type = "SHITOMASI";
 
-    if (detectorType.compare("SHITOMASI") == 0) {
-      detKeypointsShiTomasi(keypoints, imgGray, false);
+    if (detector_type.compare("SHITOMASI") == 0) {
+      detKeypointsShiTomasi(keypoints, imgGray, bVis);
+    } else if (detector_type.compare("HARRIS") == 0) {
+      detKeypointsHarris(keypoints, imgGray, bVis);
+    } else if (detector_type.compare("FAST") == 0 ||
+               detector_type.compare("BRISK") == 0 ||
+               detector_type.compare("ORB") == 0 ||
+               detector_type.compare("AKAZE") == 0 ||
+               detector_type.compare("SIFT") == 0) {
+      detKeypointsModern(keypoints, imgGray, detector_type, bVis);
     } else {
-      //...
+      std::cerr << detector_type << " not supported!" << std::endl;
     }
 
     // optional : limit number of keypoints (helpful for debugging and learning)
@@ -214,7 +223,7 @@ int main(int argc, const char *argv[]) {
     if (bLimitKpts) {
       int maxKeypoints = 50;
 
-      if (detectorType.compare("SHITOMASI") ==
+      if (detector_type.compare("SHITOMASI") ==
           0) { // there is no response info, so keep the first 50 as they are
                // sorted in descending quality order
         keypoints.erase(keypoints.begin() + maxKeypoints, keypoints.end());
@@ -231,8 +240,8 @@ int main(int argc, const char *argv[]) {
     /* EXTRACT KEYPOINT DESCRIPTORS */
 
     cv::Mat descriptors;
-    std::string descriptorType =
-        "BRISK"; // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    // BRISK, BRIEF, ORB, FREAK, AKAZE, SIFT
+    std::string descriptorType = "BRISK";
     descKeypoints((dataBuffer.end() - 1)->keypoints,
                   (dataBuffer.end() - 1)->cameraImg, descriptors,
                   descriptorType);
@@ -242,16 +251,16 @@ int main(int argc, const char *argv[]) {
 
     std::cout << "#6 : EXTRACT DESCRIPTORS done" << std::endl;
 
-    if (dataBuffer.size() >
-        1) // wait until at least two images have been processed
-    {
+    // wait until at least two images have been processed
+    if (dataBuffer.size() > 1) {
 
       /* MATCH KEYPOINT DESCRIPTORS */
 
       std::vector<cv::DMatch> matches;
-      std::string matcherType = "MAT_BF";        // MAT_BF, MAT_FLANN
-      std::string descriptorType = "DES_BINARY"; // DES_BINARY, DES_HOG
-      std::string selectorType = "SEL_NN";       // SEL_NN, SEL_KNN
+      std::string matcherType = "MAT_BF"; // MAT_BF, MAT_FLANN
+      std::string distance_type =
+          (descriptorType.compare("SIFT") == 0) ? "DES_HOG" : "DES_BINARY";
+      std::string selectorType = "SEL_KNN"; // SEL_NN, SEL_KNN
 
       matchDescriptors((dataBuffer.end() - 2)->keypoints,
                        (dataBuffer.end() - 1)->keypoints,
@@ -267,7 +276,8 @@ int main(int argc, const char *argv[]) {
       /* TRACK 3D OBJECT BOUNDING BOXES */
 
       //// STUDENT ASSIGNMENT
-      //// TASK FP.1 -> match list of 3D objects (vector<BoundingBox>) between
+      //// TODO(a-ngo) TASK FP.1 -> match list of 3D objects
+      /// (vector<BoundingBox>) between
       /// current and previous frame (implement ->matchBoundingBoxes)
       std::map<int, int> bbBestMatches;
       matchBoundingBoxes(
@@ -307,22 +317,21 @@ int main(int argc, const char *argv[]) {
         }
 
         // compute TTC for current match
-        if (currBB->lidarPoints.size() > 0 &&
-            prevBB->lidarPoints.size() >
-                0) // only compute TTC if we have Lidar points
-        {
+        // only compute TTC if we have Lidar points
+        if (currBB->lidarPoints.size() > 0 && prevBB->lidarPoints.size() > 0) {
           //// STUDENT ASSIGNMENT
-          //// TASK FP.2 -> compute time-to-collision based on Lidar data
-          ///(implement -> computeTTCLidar)
+          //// TODO(a-ngo) TASK FP.2 -> compute time-to-collision based on Lidar
+          /// data (implement -> computeTTCLidar)
           double ttcLidar;
           computeTTCLidar(prevBB->lidarPoints, currBB->lidarPoints,
                           sensorFrameRate, ttcLidar);
           //// EOF STUDENT ASSIGNMENT
 
           //// STUDENT ASSIGNMENT
-          //// TASK FP.3 -> assign enclosed keypoint matches to bounding box
-          ///(implement -> clusterKptMatchesWithROI) / TASK FP.4 -> compute
-          /// time-to-collision based on camera (implement -> computeTTCCamera)
+          // TODO(a-ngo) TASK FP.3 -> assign enclosed keypoint matches to
+          //                bounding box (implement -> clusterKptMatchesWithROI)
+          // TODO(a-ngo) TASK FP.4 -> compute time-to-collision based on
+          //                            camera (implement -> computeTTCCamera)
           double ttcCamera;
           clusterKptMatchesWithROI(*currBB, (dataBuffer.end() - 2)->keypoints,
                                    (dataBuffer.end() - 1)->keypoints,
