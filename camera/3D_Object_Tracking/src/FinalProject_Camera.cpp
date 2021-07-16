@@ -187,9 +187,9 @@ int main(int argc, const char *argv[]) {
 
     std::cout << "#4 : CLUSTER LIDAR POINT CLOUD done" << std::endl;
 
-    // TODO(a-ngo): REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
-    continue; // skips directly to the next image without processing what comes
-              // beneath
+    // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
+    // continue; // skips directly to the next image without processing what
+    // comes beneath
 
     /* DETECT IMAGE KEYPOINTS */
     // TODO(a-ngo): add code from midterm project
@@ -200,8 +200,7 @@ int main(int argc, const char *argv[]) {
                  cv::COLOR_BGR2GRAY);
 
     // extract 2D keypoints from current image
-    std::vector<cv::KeyPoint>
-        keypoints; // create empty feature list for current image
+    std::vector<cv::KeyPoint> keypoints;
     std::string detector_type = "SHITOMASI";
 
     if (detector_type.compare("SHITOMASI") == 0) {
@@ -280,10 +279,10 @@ int main(int argc, const char *argv[]) {
       /// (vector<BoundingBox>) between
       /// current and previous frame (implement ->matchBoundingBoxes)
       std::map<int, int> bbBestMatches;
-      matchBoundingBoxes(
-          matches, bbBestMatches, *(dataBuffer.end() - 2),
-          *(dataBuffer.end() - 1)); // associate bounding boxes between current
-                                    // and previous frame using keypoint matches
+      // associate bounding boxes between current
+      // and previous frame using keypoint matches
+      matchBoundingBoxes(matches, bbBestMatches, *(dataBuffer.end() - 2),
+                         *(dataBuffer.end() - 1));
       //// EOF STUDENT ASSIGNMENT
 
       // store matches in current data frame

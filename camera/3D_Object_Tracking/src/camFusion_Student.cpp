@@ -168,5 +168,19 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches,
                         std::map<int, int> &bbBestMatches, DataFrame &prevFrame,
                         DataFrame &currFrame) {
-  // ...
+  // check if keypoints from matches are within bbox (prevframe)
+
+  // check if keypoints from matches are within bbox (currframe)
+  for (auto match : matches) {
+  }
+
+  for (auto prev_bbox : prevFrame.boundingBoxes) {
+    for (auto curr_bbox : currFrame.boundingBoxes) {
+    }
+  }
+
+  // if a keypoint is within the same bbox in BOTH frames -> found matched bbox
+
+  // return a map of matched bboxes - from prev and curr frame
+  // assign each bbox a match candidate with the highest number of occurrences
 }
