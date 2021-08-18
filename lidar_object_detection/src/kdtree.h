@@ -36,7 +36,7 @@ struct KdTree {
       *node = new Node(point, id);
     } else {
       // current dimension
-      uint dim = depth % 2;
+      uint dim = depth % 3;
 
       if (point[dim] < (*node)->point[dim]) {
         insert_helper(&(*node)->left, depth + 1, point, id);
@@ -54,19 +54,21 @@ struct KdTree {
                      std::vector<float> target, float distance_tol) {
     if (node != NULL) {
       if (fabs(node->point[0] - target[0]) <= distance_tol &&
-          fabs(node->point[1] - target[1]) <= distance_tol) {
+          fabs(node->point[1] - target[1]) <= distance_tol &&
+          fabs(node->point[2] - target[2]) <= distance_tol) {
         // calculate distance of target and node -> if smaller then add node id
 
         float x = node->point[0] - target[0];
         float y = node->point[1] - target[1];
-        float distance = sqrt(pow(x, 2) + pow(y, 2));
+        float z = node->point[2] - target[2];
+        float distance = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 
         if (distance <= distance_tol) {
           ids.push_back(node->id);
         }
       }
 
-      uint dim = depth % 2;
+      uint dim = depth % 3;
       if ((target[dim] - distance_tol) < node->point[dim])
         search_helper(node->left, depth + 1, ids, target, distance_tol);
       if ((target[dim] + distance_tol) > node->point[dim])
