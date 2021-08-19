@@ -33,3 +33,50 @@ In this final project, you will implement the missing parts in the schematic. To
 2. Make a build directory in the top level project directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./3D_object_tracking`.
+
+
+## Project Tasks - Performance Evaluation
+
+### FP.5
+- the results are listed in [method_comparison](method_comparison.ods)
+- I did not find any significant outlier in the lidar TTC calculation
+- the lidar ttc values are all in the range 8-17s
+- the only thing that might be not plausible is that around frame 4,5 the ttc increases to about 16s
+- this might be due to the calculation of the ttc, because I used the median distance of the point cloud
+
+### FP.6
+- as mentioned before, the results are listed in [method_comparison](method_comparison.ods)
+- hereby, I compared all possible detector and descriptor combinations and saved the ttc values of lidar, camera, and the absolute delta between both
+- observations
+  - especially the HARRIS and ORB detectors produces very poor TTC estimations compared to lidar ttc
+  - whereas FAST and SIFT achieved very good estimations
+
+
+- detector_type, descriptor_type, frame, ttc_camera, ttc_lidar, abs(ttc_camera-ttc_lidar)
+- snippet of the results table below:
+
+- TOP 10
+BRISK	 ORB	17	9.54524	9.54658	0.0013377
+FAST	 ORB	6	12.6684	12.6787	0.0103077
+FAST	 ORB	7	11.9712	11.9844	0.0131715
+FAST	 SIFT	3	14.0617	14.091	0.029332
+BRISK	 FREAK	11	12.8407	12.8086	0.0321132
+ORB	 SIFT	10	11.1389	11.1746	0.035773
+FAST	 ORB	2	12.6574	12.6142	0.0431052
+ORB	 SIFT	16	9.56045	9.51617	0.0442762
+FAST	 ORB	8	13.1719	13.1241	0.0477812
+SIFT	 SIFT	2	12.5597	12.6142	0.0545167
+SIFT	 BRISK	13	10.0226	9.96439	0.0582309
+
+- WORST 10
+ORB	 BRISK	5	520.246	15.9082	504.338
+ORB	 SIFT	5	502.13	15.9082	486.222
+ORB	 SIFT	4	209.183	16.6894	192.494
+ORB	 BRIEF	9	140.565	13.0241	127.541
+HARRIS	 ORB	3	-80.8525	14.091	94.9435
+HARRIS	 SIFT	10	-76.9648	11.1746	88.1394
+HARRIS	 SIFT	2	80.7525	12.6142	68.1383
+ORB	 BRISK	12	51.3351	8.95978	42.3754
+ORB	 FREAK	14	39.1271	9.59863	29.5285
+ORB	 ORB	18	36.3076	8.3988	27.9088
+ORB	 BRIEF	5	43.498	15.9082	27.5898

@@ -134,7 +134,7 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize,
 
   // display image
   string windowName = "3D Objects";
-  cv::namedWindow(windowName, 1);
+  cv::namedWindow(windowName, 4);
   cv::imshow(windowName, topviewImg);
 
   if (bWait) {
@@ -144,43 +144,115 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize,
 
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox,
-                              std::vector<cv::KeyPoint> &kptsPrev,
-                              std::vector<cv::KeyPoint> &kptsCurr,
-                              std::vector<cv::DMatch> &kptMatches) {
-  // ...
+                              std::vector<cv::KeyPoint> &kpts_prev,
+                              std::vector<cv::KeyPoint> &kpts_curr,
+                              std::vector<cv::DMatch> &kpt_matches) {
+  for (cv::DMatch match : kpt_matches) {
+      if (boundingBox.roi.contains(kpts_curr[match.trainIdx].pt)) {
+          boundingBox.kptMatches.push_back(match);
+      }
+  }
 }
 
 // Compute time-to-collision (TTC) based on keypoint correspondences in
 // successive images
-void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev,
-                      std::vector<cv::KeyPoint> &kptsCurr,
-                      std::vector<cv::DMatch> kptMatches, double frameRate,
+void computeTTCCamera(std::vector<cv::KeyPoint> &kpts_prev,
+                      std::vector<cv::KeyPoint> &kpts_curr,
+                      std::vector<cv::DMatch> keypoint_matches, double frame_rate,
                       double &TTC, cv::Mat *visImg) {
-  // ...
+  vector<double> distance_ratios;
+  for (auto it1 = keypoint_matches.begin(); it1 != keypoint_matches.end() - 1; ++it1) {
+      cv::KeyPoint keypoint_outer_curr = kpts_curr.at(it1->trainIdx);
+      cv::KeyPoint keypoint_outer_prev = kpts_prev.at(it1->queryIdx);
+
+      for (auto it2 = keypoint_matches.begin() + 1; it2 != keypoint_matches.end(); ++it2) {
+          cv::KeyPoint keypoint_inner_curr = kpts_curr.at(it2->trainIdx);
+          cv::KeyPoint keypoint_inner_prev = kpts_prev.at(it2->queryIdx);
+
+          double distance_curr = cv::norm(keypoint_outer_curr.pt - keypoint_inner_curr.pt);
+          double distance_prev = cv::norm(keypoint_outer_prev.pt - keypoint_inner_prev.pt);
+
+          if (distance_prev > std::numeric_limits<double>::epsilon() && distance_curr >= 100.0) {
+              double distance_ratio = distance_curr / distance_prev;
+              distance_ratios.push_back(distance_ratio);
+          }
+      }
+  }
+
+  if (distance_ratios.size() == 0)
+  {
+      TTC = std::numeric_limits<double>::quiet_NaN();
+      return;
+  }
+  std::sort(distance_ratios.begin(), distance_ratios.end());
+  double median_distance_ratio = distance_ratios[distance_ratios.size() / 2];
+
+  TTC = (-1.0 / frame_rate) / (1 - median_distance_ratio);
 }
 
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
-                     std::vector<LidarPoint> &lidarPointsCurr, double frameRate,
+                     std::vector<LidarPoint> &lidarPointsCurr, double frame_rate,
                      double &TTC) {
-  // ...
+
+  std::sort(lidarPointsPrev.begin(), lidarPointsPrev.end(), [](LidarPoint p1, LidarPoint p2) {
+        return p1.x < p2.x;  // ascending
+  });
+  
+  std::sort(lidarPointsCurr.begin(), lidarPointsCurr.end(), [](LidarPoint p1, LidarPoint p2) {
+        return p1.x < p2.x;  // ascending
+  });
+
+  double d_prev = lidarPointsPrev[lidarPointsPrev.size()/2].x;
+  double d_curr = lidarPointsCurr[lidarPointsCurr.size()/2].x;
+
+  TTC = d_curr * (1.0 / frame_rate) / (d_prev - d_curr);
 }
 
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches,
-                        std::map<int, int> &bbBestMatches, DataFrame &prevFrame,
-                        DataFrame &currFrame) {
-  // check if keypoints from matches are within bbox (prevframe)
+                        std::map<int, int> &bbBestMatches, DataFrame &prev_frame,
+                        DataFrame &curr_frame) {
+  std::multimap<int, int> multimap {};
+  int max_prev_box_id = 0;
 
-  // check if keypoints from matches are within bbox (currframe)
   for (auto match : matches) {
+      cv::KeyPoint prevKp = prev_frame.keypoints[match.queryIdx];
+      cv::KeyPoint currKp = curr_frame.keypoints[match.trainIdx];
+      
+      int prev_box_id = -1;
+      int currBoxID = -1;
+
+      // check if keypoints from matches are within bbox (prevframe)
+      for (auto bbox : prev_frame.boundingBoxes) {
+          if (bbox.roi.contains(prevKp.pt)) {
+            prev_box_id = bbox.boxID;
+          }
+      }
+
+      // check if keypoints from matches are within bbox (curr_frame)
+      for (auto bbox : curr_frame.boundingBoxes) {
+          if (bbox.roi.contains(currKp.pt)) {
+            currBoxID = bbox.boxID;
+          }
+      }
+      
+      multimap.insert({currBoxID, prev_box_id});
+      max_prev_box_id = std::max(max_prev_box_id, prev_box_id);
   }
 
-  for (auto prev_bbox : prevFrame.boundingBoxes) {
-    for (auto curr_bbox : currFrame.boundingBoxes) {
-    }
+  vector<int> curr_frame_box_ids {};
+  for (auto box : curr_frame.boundingBoxes) {
+    curr_frame_box_ids.push_back(box.boxID);
   }
 
-  // if a keypoint is within the same bbox in BOTH frames -> found matched bbox
+  for (int k : curr_frame_box_ids) {
+      auto range_prev_box_ids = multimap.equal_range(k);
+      std::vector<int> counts(max_prev_box_id + 1, 0);
 
-  // return a map of matched bboxes - from prev and curr frame
-  // assign each bbox a match candidate with the highest number of occurrences
+      for (auto it = range_prev_box_ids.first; it != range_prev_box_ids.second; ++it) {
+          if (-1 != (*it).second) counts[(*it).second] += 1;
+      }
+
+      int modeIndex = std::distance(counts.begin(), std::max_element(counts.begin(), counts.end()));
+      bbBestMatches.insert({modeIndex, k});
+  }
 }
