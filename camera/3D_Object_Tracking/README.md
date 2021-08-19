@@ -37,6 +37,29 @@ In this final project, you will implement the missing parts in the schematic. To
 
 ## Project Tasks - Performance Evaluation
 
+### FP.1
+- implemented in camFusion_Student.cpp line 232-279
+- used a multimap to track the pairs of bounding box indices
+- counted the keypoint correspondences for each box pair
+- to find the best match between previous and current frames
+
+### FP.2
+- implemented in camFusion_Student.cpp line 214-230
+- sorted the vectors of lidar points from the previous and current frame
+- and used the median to calculate the TTC 
+
+### FP.3
+- implemented in camFusion_Student.cpp line 146-176
+- associate the bounding boxes with the keypoints it contains
+- by calculating the euclidean distances between all keypoints
+- and only allowing a distance which is lower than a defined threshold
+- therefore, the outliers can be found and removed
+
+### FP.4
+- implemented in camFusion_Student.cpp line 180-201
+- like lidar ttc calculation, here I also used the median for the camera ttc calculation
+- hereby, the distance ratio is used for the calculation which is similar from the 2D feature tracking project 
+
 ### FP.5
 - the results are listed in [method_comparison](method_comparison.ods)
 - I did not find any significant outlier in the lidar TTC calculation

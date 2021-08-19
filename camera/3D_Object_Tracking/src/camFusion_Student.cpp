@@ -216,11 +216,11 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
                      double &TTC) {
 
   std::sort(lidarPointsPrev.begin(), lidarPointsPrev.end(), [](LidarPoint p1, LidarPoint p2) {
-        return p1.x < p2.x;  // ascending
+        return p1.x < p2.x;
   });
   
   std::sort(lidarPointsCurr.begin(), lidarPointsCurr.end(), [](LidarPoint p1, LidarPoint p2) {
-        return p1.x < p2.x;  // ascending
+        return p1.x < p2.x;
   });
 
   double d_prev = lidarPointsPrev[lidarPointsPrev.size()/2].x;
