@@ -175,9 +175,8 @@ noise_level = zeros(1,1);
     % Use RDM[x,y] as the matrix from the output of 2D FFT for implementing
     % CFAR
         
-guard_cells_number = (2 * Gr + 1) * (2 * Gd + 1) - 1;
-training_cells_number = (2 * Tr + 2 * Gr + 1) * ...
-    (2 * Td + 2 * Gd + 1) - (guard_cells_number + 1);
+N_guard = (2 * Gr + 1) * (2 * Gd + 1) - 1;  % Remove CUT
+N_training = (2 * Tr + 2 * Gr + 1) * (2 * Td + 2 * Gd + 1) - (N_guard + 1);
 
 % *%TODO* :
 % The process above will generate a thresholded block, which is smaller 
@@ -193,7 +192,11 @@ for range_index = Tr+Gr+1 : Nr/2-(Gr+Tr)
         training_cells = db2pow(RDM(range_index - Tr - Gr : range_index + Tr + Gr, ...
                        doppler_index - Td - Gd : doppler_index + Td + Gd));
 
-        training_cells = pow2db(sum(training_cells) / training_cells_number);
+        % Calculate the training mean
+        training_cells = sum(training_cells) / N_training;
+        
+        % Revert average power to decibels
+        training_cells = pow2db(training_cells);
         
         % Use the offset to determine the SNR threshold
         threshold =  offset + training_cells;
