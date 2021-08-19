@@ -50,13 +50,9 @@ public:
   SegmentPlane(typename pcl::PointCloud<PointT>::Ptr cloud, int maxIterations,
                float distanceThreshold);
 
-  void proximity(const std::vector<float> point, std::vector<int> &cluster,
-                 KdTree *tree, float distance_tol, unsigned int point_id,
-                 std::unordered_set<int> &processed_points);
-
   std::vector<std::vector<int>>
   euclideanCluster(const std::vector<std::vector<float>> &points, KdTree *tree,
-                   float distance_tol);
+                   float distance_tol, int min_size, int max_size);
 
   std::vector<typename pcl::PointCloud<PointT>::Ptr>
   Clustering(typename pcl::PointCloud<PointT>::Ptr cloud,

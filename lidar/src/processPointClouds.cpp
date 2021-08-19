@@ -216,38 +216,44 @@ ProcessPointClouds<PointT>::SegmentPlane(
   return segResult;
 }
 
-template <typename PointT>
-void ProcessPointClouds<PointT>::proximity(
-    const std::vector<float> point, std::vector<int> &cluster, KdTree *tree,
-    float distance_tol, unsigned int point_id,
-    std::unordered_set<int> &processed_points) {
-  if (!processed_points.count(point_id)) {
-    processed_points.insert(point_id);
-    cluster.push_back(point_id);
-    std::vector<int> nearby_point_ids = tree->search(point, distance_tol);
-    for (int id : nearby_point_ids) {
-      proximity(point, cluster, tree, distance_tol, id, processed_points);
-    }
-  }
+static void cluster_helper(int index, const std::vector<std::vector<float>> points, std::vector<int>& cluster, std::vector<bool>& processed, KdTree* tree, float distanceTol) {
+	processed[index] = true;
+	cluster.push_back(index);
+	std::vector<int> nearest = tree->search(points[index], distanceTol);
+
+	for (int idx : nearest) {
+		if (!processed[idx]) {
+			cluster_helper(idx, points, cluster, processed, tree, distanceTol);
+		}
+	}
 }
 
 template <typename PointT>
 std::vector<std::vector<int>> ProcessPointClouds<PointT>::euclideanCluster(
     const std::vector<std::vector<float>> &points, KdTree *tree,
-    float distance_tol) {
+    float distance_tol, int min_size, int max_size) {
   std::vector<std::vector<int>> clusters;
-  std::unordered_set<int> processed_points;
-  unsigned int point_id{0};
-  for (const std::vector<float> point : points) {
-    if (!processed_points.count(point_id)) {
-      std::vector<int> cluster;
-      // find and add all nearby points to cluster
-      proximity(point, cluster, tree, distance_tol, point_id, processed_points);
-      clusters.push_back(cluster);
-    }
-    ++point_id;
-  }
-  return clusters;
+	std::vector<bool> processed(points.size(), false);
+
+	int i = 0;
+	while (i < points.size()) {
+		if (processed[i]) {
+            i++;
+            continue;
+        }
+
+		std::vector<int> cluster;
+		cluster_helper(i, points, cluster, processed, tree, distance_tol);
+        if (cluster.size() >= min_size && cluster.size() <= max_size) {
+            clusters.push_back(cluster);
+        } else {
+            for (int remove_index : cluster) {
+                processed[remove_index] = false;
+            }
+        }
+        i++;
+	}
+	return clusters;
 }
 
 template <typename PointT>
@@ -300,16 +306,17 @@ ProcessPointClouds<PointT>::Clustering(
 
   // create tree
   KdTree *tree = new KdTree;
-  for (int i = 0; i < cloud_points.size(); i++)
+  for (int i = 0; i < cloud_points.size(); i++) {
     tree->insert(cloud_points[i], i);
+  }
 
-  // perform clustering
+  // perform actual clustering
+  // TODO: move min max here?
   std::vector<std::vector<int>> clusters_ids =
-      euclideanCluster(cloud_points, tree, cluster_tolerance);
+      euclideanCluster(cloud_points, tree, cluster_tolerance, min_size, max_size);
 
+  // push found clusters to clusters (result)
   for (auto cluster_ids : clusters_ids) {
-    if (cluster_ids.size() >= min_size && cluster_ids.size() <= max_size) {
-
     typename pcl::PointCloud<PointT>::Ptr cluster(
         new pcl::PointCloud<PointT>());
 
@@ -320,7 +327,6 @@ ProcessPointClouds<PointT>::Clustering(
       cluster->is_dense = true;
     }
     clusters.push_back(cluster);
-    }
   }
 
   auto endTime = std::chrono::steady_clock::now();

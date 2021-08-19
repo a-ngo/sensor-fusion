@@ -129,7 +129,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                 ProcessPointClouds<pcl::PointXYZI> *pointProcessorI,
                 pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI) {
   // filter cloud
-  float filter_res{0.17f}; // 0.2
+  float filter_res{0.2f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud =
       pointProcessorI->FilterCloud(inputCloudI, filter_res,
                                    Eigen::Vector4f(-20, -5.5, -5, 1),
@@ -138,7 +138,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
   // segmentation
   std::pair<pcl::PointCloud<pcl::PointXYZI>::Ptr,
             pcl::PointCloud<pcl::PointXYZI>::Ptr>
-      segmentedClouds = pointProcessorI->SegmentPlane(filteredCloud, 100, 0.2f);
+      segmentedClouds = pointProcessorI->SegmentPlane(filteredCloud, 25, 0.2f);
   renderPointCloud(viewer, segmentedClouds.first, "obstacleCloud",
                    Color(1, 0, 0));
   renderPointCloud(viewer, segmentedClouds.second, "planeCloud",
@@ -146,7 +146,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
 
   // cluster objects
   std::vector<pcl::PointCloud<pcl::PointXYZI>::Ptr> cloud_clusters =
-      pointProcessorI->Clustering(segmentedClouds.first, 4.1, 15, 500); // 4.1
+      pointProcessorI->Clustering(segmentedClouds.first, 0.45, 35, 800);
 
   int cluster_id{0};
   Color obstacle_color{1, 0, 0};
