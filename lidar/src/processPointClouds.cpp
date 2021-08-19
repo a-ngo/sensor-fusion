@@ -308,6 +308,8 @@ ProcessPointClouds<PointT>::Clustering(
       euclideanCluster(cloud_points, tree, cluster_tolerance);
 
   for (auto cluster_ids : clusters_ids) {
+    if (cluster_ids.size() >= min_size && cluster_ids.size() <= max_size) {
+
     typename pcl::PointCloud<PointT>::Ptr cluster(
         new pcl::PointCloud<PointT>());
 
@@ -318,6 +320,7 @@ ProcessPointClouds<PointT>::Clustering(
       cluster->is_dense = true;
     }
     clusters.push_back(cluster);
+    }
   }
 
   auto endTime = std::chrono::steady_clock::now();
