@@ -146,10 +146,31 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize,
 void clusterKptMatchesWithROI(BoundingBox &boundingBox,
                               std::vector<cv::KeyPoint> &kpts_prev,
                               std::vector<cv::KeyPoint> &kpts_curr,
-                              std::vector<cv::DMatch> &kpt_matches) {
-  for (cv::DMatch match : kpt_matches) {
-      if (boundingBox.roi.contains(kpts_curr[match.trainIdx].pt)) {
-          boundingBox.kptMatches.push_back(match);
+                              std::vector<cv::DMatch> &kpt_matches) {  
+  cv::KeyPoint keypoint_current, keypoint_previous;
+  std::vector<cv::DMatch> bounding_box_matches;
+  std::vector<double> euclidean_distances;
+
+  // find matches for keypoints in BB
+  for (auto it = kpt_matches.begin(); it!=kpt_matches.end(); ++it) {
+      keypoint_current = kpts_curr[(*it).trainIdx];
+      keypoint_previous = kpts_prev[(*it).queryIdx];
+
+      if(boundingBox.roi.contains(keypoint_current.pt)) {
+          bounding_box_matches.push_back((*it));
+          euclidean_distances.push_back(cv::norm(keypoint_current.pt-keypoint_previous.pt));
+      }
+  }
+    
+  const double kdistance_threshold = 1.5 * std::accumulate(euclidean_distances.begin(), 
+                                      euclidean_distances.end(), 0.0) / euclidean_distances.size();
+
+  auto it1= bounding_box_matches.begin();
+  for (auto it2 = euclidean_distances.begin(); it2!=euclidean_distances.end(); ++it2,++it1) {
+      if((*it2) <  kdistance_threshold  ) {
+          keypoint_current = kpts_curr[(*it1).trainIdx];
+          boundingBox.kptMatches.push_back((*it1));
+          boundingBox.keypoints.push_back(keypoint_current);
       }
   }
 }
