@@ -66,7 +66,7 @@ void descKeypoints(std::vector<cv::KeyPoint> &keypoints, cv::Mat &img,
   // select appropriate descriptor
   cv::Ptr<cv::DescriptorExtractor> extractor;
   if (descriptor_type.compare("BRISK") == 0) {
-    int threshold = 30;        // FAST/AGAST detection threshold score.
+    const int threshold = 30;        // FAST/AGAST detection threshold score.
     int octaves = 3;           // detection octaves (use 0 to do single scale)
     float patternScale = 1.0f; // apply this scale to the pattern used for
                                // sampling the neighbourhood of a keypoint.
