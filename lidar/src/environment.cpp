@@ -129,7 +129,7 @@ void city_block(pcl::visualization::PCLVisualizer::Ptr &viewer,
                 ProcessPointClouds<pcl::PointXYZI> *pointProcessorI,
                 pcl::PointCloud<pcl::PointXYZI>::Ptr inputCloudI) {
   // filter cloud
-  float filter_res{0.2f};
+  float filter_res{0.4f};
   pcl::PointCloud<pcl::PointXYZI>::Ptr filteredCloud =
       pointProcessorI->FilterCloud(inputCloudI, filter_res,
                                    Eigen::Vector4f(-20, -5.5, -5, 1),
