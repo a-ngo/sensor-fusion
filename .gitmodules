@@ -1,3 +1,6 @@
 [submodule "kalman-filters"]
 	path = kalman-filters
 	url = https://github.com/a-ngo/kalman-filters.git
+[submodule "lidar-object-detection"]
+	path = lidar-object-detection
+	url = https://github.com/a-ngo/lidar-object-detection.git
