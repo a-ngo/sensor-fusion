@@ -7,3 +7,6 @@
 [submodule "computer-vision"]
 	path = computer-vision
 	url = https://github.com/a-ngo/computer-vision.git
+[submodule "radar-signal-processing"]
+	path = radar-signal-processing
+	url = https://github.com/a-ngo/radar-signal-processing.git
