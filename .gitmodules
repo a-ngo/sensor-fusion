@@ -4,3 +4,6 @@
 [submodule "lidar-object-detection"]
 	path = lidar-object-detection
 	url = https://github.com/a-ngo/lidar-object-detection.git
+[submodule "computer-vision"]
+	path = computer-vision
+	url = https://github.com/a-ngo/computer-vision.git
